@@ -47,11 +47,6 @@ ENV PATH="/home/appuser/.local/bin:$PATH" \
 # Copy application source code with non-root ownership
 COPY --chown=appuser:appuser . .
 
-
-# Retain pre-built frontend distribution assets
-COPY --chown=appuser:appuser extension/ui/dist ./extension/ui/dist
-
-
 USER appuser
 
 EXPOSE 8000

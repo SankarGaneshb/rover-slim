@@ -11,7 +11,6 @@ build:
   target_base_image: "python:3.11-slim"
   enable_multistage: true
   strip_node_runtime: true
-  frontend_dist_path: "extension/ui/dist"
 
 verification:
   auto_discover: true
