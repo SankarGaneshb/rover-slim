@@ -1,0 +1,79 @@
+name: "Rover-Slim Container Optimization & Governance"
+description: "Autonomously audits, optimizes, and verifies Docker containers for zero waste, AST dependency segregation, and fast cold starts."
+author: "Market-Rover SRE Team"
+branding:
+  icon: "zap"
+  color: "green"
+
+inputs:
+  project_path:
+    description: "Path to project root"
+    required: false
+    default: "."
+  max_image_size_mb:
+    description: "Maximum allowable uncompressed image size in MB"
+    required: false
+    default: "350"
+  max_wasted_percent:
+    description: "Maximum allowable layer waste percentage"
+    required: false
+    default: "10"
+  verify_goa:
+    description: "Run Green-on-Arrival sentinel verification probes"
+    required: false
+    default: "true"
+  auto_commit:
+    description: "Automatically commit and push segregated requirements and multi-stage Dockerfile"
+    required: false
+    default: "false"
+  github_token:
+    description: "GitHub token for commenting on PRs"
+    required: false
+    default: "${{ github.token }}"
+
+outputs:
+  size_reduction_pct:
+    description: "Percentage container size reduction achieved"
+    value: "${{ steps.run-rover-slim.outputs.reduction_pct }}"
+  optimized_size_mb:
+    description: "Final optimized image size in MB"
+    value: "${{ steps.run-rover-slim.outputs.optimized_size_mb }}"
+  report_json:
+    description: "Structured JSON metrics summary"
+    value: "${{ steps.run-rover-slim.outputs.report_json }}"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install Rover-Slim
+      shell: bash
+      run: |
+        pip install rover-slim
+
+    - name: Run Rover-Slim Container Optimization
+      id: run-rover-slim
+      shell: bash
+      run: |
+        rover-slim optimize ${{ inputs.project_path }} --verify-goa
+
+    - name: Post PR Summary Comment
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ inputs.github_token }}
+        script: |
+          const fs = require('fs');
+          if (fs.existsSync('.rover-slim/summary.md')) {
+            const summary = fs.readFileSync('.rover-slim/summary.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+          }

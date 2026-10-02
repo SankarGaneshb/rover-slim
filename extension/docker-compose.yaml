@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  backend:
+    image: "${DESKTOP_PLUGIN_IMAGE}"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "40040:8000"

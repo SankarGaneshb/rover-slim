@@ -1,0 +1,51 @@
+version: "1.0"
+project_name: "rover-slim"
+
+thresholds:
+  max_image_size_mb: 250.0
+  max_wasted_percent: 5.0
+  max_cold_start_seconds: 1.5
+  fail_on_cve_severity: ["CRITICAL"]
+
+build:
+  target_base_image: "python:3.11-slim"
+  enable_multistage: true
+  strip_node_runtime: true
+  frontend_dist_path: "extension/ui/dist"
+
+verification:
+  auto_discover: true
+  startup_command: "import rover_slim; print('[OK] Rover-Slim Verified')"
+  probes:
+    - name: "HTTP Health Probe"
+      type: "http"
+      path: "/health"
+      port: 8000
+      expected_status: 200
+      timeout_seconds: 5
+
+dependencies:
+  always_production:
+    - "typer"
+    - "pydantic"
+    - "jinja2"
+    - "docker"
+    - "requests"
+    - "rich"
+    - "pyyaml"
+    - "mcp"
+    - "fastapi"
+    - "uvicorn"
+  always_development:
+    - "pytest"
+    - "pytest-cov"
+    - "pytest-asyncio"
+    - "pytest-mock"
+    - "black"
+    - "ruff"
+
+reporting:
+  formats: ["terminal", "markdown", "html", "json"]
+  json_output_path: ".rover-slim/report.json"
+  html_output_path: ".rover-slim/report.html"
+  markdown_output_path: ".rover-slim/summary.md"

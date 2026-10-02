@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#38bdf8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0284c7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Outer Shield / Container -->
+  <rect x="14" y="14" width="100" height="100" rx="24" fill="#0f172a" stroke="url(#grad1)" stroke-width="4"/>
+  
+  <!-- Container Grid Boxes -->
+  <rect x="28" y="72" width="18" height="18" rx="4" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="50" y="72" width="18" height="18" rx="4" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="72" y="72" width="18" height="18" rx="4" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  
+  <!-- Center Slim Rocket -->
+  <path d="M64 26 C54 36 48 54 48 68 L80 68 C80 54 74 36 64 26 Z" fill="url(#grad1)"/>
+  <circle cx="64" cy="46" r="5" fill="#0f172a"/>
+  
+  <!-- Wings -->
+  <path d="M48 58 L38 70 L48 68 Z" fill="#0284c7"/>
+  <path d="M80 58 L90 70 L80 68 Z" fill="#0284c7"/>
+  
+  <!-- Propulsion Flame -->
+  <path d="M56 68 Q64 88 64 88 Q64 88 72 68 Z" fill="#f59e0b"/>
+  <path d="M60 68 Q64 80 64 80 Q64 80 68 68 Z" fill="#ef4444"/>
+
+  <!-- Green Check Badge for GoA Sentinel -->
+  <circle cx="94" cy="94" r="14" fill="#10b981"/>
+  <path d="M88 94 L92 98 L100 89" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

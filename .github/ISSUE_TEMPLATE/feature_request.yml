@@ -1,0 +1,28 @@
+name: 🚀 Feature Request
+description: Propose a new feature, analyzer, or enhancement for Rover-Slim
+title: "[FEAT]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to make Rover-Slim even better? We'd love to hear it!
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Motivation
+      description: Is your feature request related to a problem or limitation?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see implemented.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Approaches Considered
+      description: Any alternative solutions or workarounds you've considered.

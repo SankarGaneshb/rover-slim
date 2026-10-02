@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rover-slim"
+version = "1.0.0"
+description = "Autonomous container optimization, AST dependency pruning, and Green-on-Arrival verification engine."
+readme = "README.md"
+authors = [{ name = "Sankar Ganesh", email = "bsankarganesh@users.noreply.github.com" }]
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+    "typer[all]>=0.9.0",
+    "pydantic>=2.0.0",
+    "jinja2>=3.1.0",
+    "docker>=6.1.0",
+    "requests>=2.31.0",
+    "rich>=13.0.0",
+    "pyyaml>=6.0",
+    "mcp>=1.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.22.0"
+]
+
+[project.scripts]
+rover-slim = "rover_slim.cli:app"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.11.0",
+    "black>=23.7.0",
+    "ruff>=0.0.280"
+]
+
+[tool.setuptools.packages.find]
+include = ["rover_slim*"]

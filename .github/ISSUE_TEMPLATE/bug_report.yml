@@ -1,0 +1,48 @@
+name: 🐛 Bug Report
+description: Report an issue or unexpected behavior in Rover-Slim
+title: "[BUG]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue with Rover-Slim!
+  - type: input
+    id: version
+    attributes:
+      label: Rover-Slim Version
+      description: What version of Rover-Slim or Extension are you running? (e.g. `rover-slim --version` or Extension `v1.0.0`)
+      placeholder: v1.0.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: OS & Environment
+      description: What OS and architecture are you using?
+      placeholder: Ubuntu 24.04 (x86_64) / macOS Sonoma (Apple Silicon) / Windows 11 WSL2
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the Bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Steps or commands to reproduce the issue.
+      placeholder: |
+        1. Run `rover-slim optimize . --verify-goa`
+        2. Inspect output
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Error Output
+      description: Relevant terminal or container logs.
+      render: shell

@@ -1,0 +1,77 @@
+# ==============================================================================
+# STAGE 1: Ephemeral Build & Compilation Environment
+# ==============================================================================
+FROM {{ target_base_image }} AS builder
+
+WORKDIR /build
+
+# Install build-time compiler tools and header packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    libpq-dev \
+    python3-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+# Copy lean production requirements and install wheels into dedicated prefix
+COPY requirements-prod.txt .
+RUN pip install --no-cache-dir --user -r requirements-prod.txt
+
+# ==============================================================================
+# STAGE 2: Minimal Distroless / Slim Production Runtime
+# ==============================================================================
+FROM {{ target_base_image }} AS runtime
+
+WORKDIR /app
+
+# Install minimal dynamic shared runtime libraries only (zero compiler toolchains)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    ca-certificates \
+ && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Security: Create non-root system user and group
+RUN groupadd -g 10001 appuser && \
+    useradd -u 10001 -g appuser -d /app -s /bin/false appuser
+
+# Copy pre-built isolated Python packages from builder stage
+COPY --from=builder /root/.local /home/appuser/.local
+
+# Set environment paths and disable byte-code writing
+ENV PATH="/home/appuser/.local/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH="/app:$PYTHONPATH"
+
+# Copy application source code with non-root ownership
+COPY --chown=appuser:appuser . .
+
+{% if frontend_dist_path %}
+# Retain pre-built frontend distribution assets
+COPY --chown=appuser:appuser {{ frontend_dist_path }} ./{{ frontend_dist_path }}
+{% endif %}
+
+USER appuser
+
+EXPOSE {{ port | default(8080) }}
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:{{ port | default(8080) }}/health || exit 1
+
+{% if entrypoint %}
+{% if entrypoint.strip().startswith('[') %}
+ENTRYPOINT {{ entrypoint.strip() }}
+{% else %}
+ENTRYPOINT [{{ entrypoint.strip() }}]
+{% endif %}
+{% endif %}
+{% if cmd %}
+{% if cmd.strip().startswith('[') %}
+CMD {{ cmd.strip() }}
+{% else %}
+CMD [{{ cmd.strip() }}]
+{% endif %}
+{% else %}
+CMD ["python", "server.py"]
+{% endif %}
