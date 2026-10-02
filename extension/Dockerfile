@@ -66,8 +66,8 @@ LABEL org.opencontainers.image.title="Rover-Slim" \
       org.opencontainers.image.description="Autonomous Container Optimization, AST Dependency Segregation, and GoA Sentinel Verification" \
       org.opencontainers.image.vendor="Rover-Slim Team" \
       com.docker.desktop.extension.api.version=">= 0.3.4" \
-      com.docker.extension.icon="icon.svg" \
-      com.docker.desktop.extension.icon="icon.svg" \
+      com.docker.extension.icon="https://raw.githubusercontent.com/SankarGaneshb/rover-slim/main/extension/icon.svg" \
+      com.docker.desktop.extension.icon="https://raw.githubusercontent.com/SankarGaneshb/rover-slim/main/extension/icon.svg" \
       com.docker.extension.categories="utility-tools,developer-tools" \
       com.docker.extension.screenshots='[{"url": "https://raw.githubusercontent.com/SankarGaneshb/rover-slim/main/docs/dashboard.png", "alt": "Rover-Slim Extension Dashboard"}]' \
       com.docker.extension.detailed-description="Rover-Slim analyzes Python AST code trees, segregates dev dependencies, synthesizes lean multi-stage Dockerfiles, and guarantees Green-on-Arrival container health." \
