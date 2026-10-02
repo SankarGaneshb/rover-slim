@@ -31,4 +31,52 @@ describe('LocalImageExplorer Component', () => {
     expect(screen.queryByText('market-rover-app:latest')).not.toBeInTheDocument();
     expect(screen.getByText('redis:7-alpine')).toBeInTheDocument();
   });
+
+  it('limits display to 5 images by default and paginates cleanly without scrollbar', () => {
+    const onSelectAndAudit = vi.fn();
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+    const mock11Images = Array.from({ length: 11 }, (_, i) => ({
+      id: `sha256:id-${i + 1}`,
+      tag: `service-image-${i + 1}:v1`,
+      size_mb: 100.0 + i * 10,
+      created: 'yesterday'
+    }));
+
+    render(
+      <LocalImageExplorer
+        images={mock11Images}
+        selectedImage="service-image-1:v1"
+        onSelectAndAudit={onSelectAndAudit}
+        onRefresh={onRefresh}
+        isLoading={false}
+      />
+    );
+
+    // Initial page shows 5 images: service-image-1 through service-image-5
+    expect(screen.getByText('service-image-1:v1')).toBeInTheDocument();
+    expect(screen.getByText('service-image-5:v1')).toBeInTheDocument();
+    expect(screen.queryByText('service-image-6:v1')).not.toBeInTheDocument();
+
+    // Pagination info
+    expect(screen.getByText(/Showing/i)).toHaveTextContent('Showing 1–5 of 11 images');
+    expect(screen.getByText(/Page 1 of 3/i)).toBeInTheDocument();
+
+    // Click Next button
+    const nextBtn = screen.getByRole('button', { name: /Next/i });
+    fireEvent.click(nextBtn);
+
+    // Now page 2 shows service-image-6 through service-image-10
+    expect(screen.getByText('service-image-6:v1')).toBeInTheDocument();
+    expect(screen.getByText('service-image-10:v1')).toBeInTheDocument();
+    expect(screen.queryByText('service-image-1:v1')).not.toBeInTheDocument();
+    expect(screen.getByText(/Page 2 of 3/i)).toBeInTheDocument();
+
+    // Click Show All
+    const showAllBtn = screen.getByRole('button', { name: /Show All \(11\)/i });
+    fireEvent.click(showAllBtn);
+
+    // All 11 images visible
+    expect(screen.getByText('service-image-1:v1')).toBeInTheDocument();
+    expect(screen.getByText('service-image-11:v1')).toBeInTheDocument();
+  });
 });

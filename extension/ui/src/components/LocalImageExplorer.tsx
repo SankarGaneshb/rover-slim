@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { HardDrive, Search, RefreshCw, Zap, Layers, AlertCircle, ArrowRight, CheckCircle2 } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { HardDrive, Search, RefreshCw, Zap, Layers, AlertCircle, ArrowRight, CheckCircle2, ChevronLeft, ChevronRight, ChevronsUpDown } from 'lucide-react';
 
 export interface LocalDockerImage {
   id: string;
@@ -24,10 +24,33 @@ export const LocalImageExplorer: React.FC<LocalImageExplorerProps> = ({
   isLoading,
 }) => {
   const [search, setSearch] = useState('');
+  const [pageSize, setPageSize] = useState<number | 'all'>(5);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const filteredImages = images.filter(img =>
-    img.tag.toLowerCase().includes(search.toLowerCase()) || img.id.toLowerCase().includes(search.toLowerCase())
-  );
+  // Filter images by search query
+  const filteredImages = useMemo(() => {
+    return images.filter(img =>
+      img.tag.toLowerCase().includes(search.toLowerCase()) ||
+      img.id.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [images, search]);
+
+  // Reset to page 1 whenever search query changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [search, pageSize]);
+
+  // Calculate pagination slice
+  const totalPages = pageSize === 'all' ? 1 : Math.max(1, Math.ceil(filteredImages.length / pageSize));
+  const effectivePage = Math.min(currentPage, totalPages);
+
+  const displayedImages = useMemo(() => {
+    if (pageSize === 'all') {
+      return filteredImages;
+    }
+    const start = (effectivePage - 1) * pageSize;
+    return filteredImages.slice(start, start + pageSize);
+  }, [filteredImages, pageSize, effectivePage]);
 
   const totalDiskMb = images.reduce((acc, img) => acc + (img.size_mb || 0), 0);
 
@@ -40,11 +63,14 @@ export const LocalImageExplorer: React.FC<LocalImageExplorerProps> = ({
     return <span className="badge badge-green">{sizeMb.toFixed(1)} MB (Lean)</span>;
   };
 
+  const startIndex = pageSize === 'all' ? 1 : (effectivePage - 1) * pageSize + 1;
+  const endIndex = pageSize === 'all' ? filteredImages.length : Math.min(effectivePage * pageSize, filteredImages.length);
+
   return (
     <div>
       {/* Search & Top Action Bar */}
-      <div className="action-bar" style={{ justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: 1, maxWidth: '450px' }}>
+      <div className="action-bar" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: 1, minWidth: '280px', maxWidth: '450px' }}>
           <Search size={18} color="var(--text-muted)" />
           <input
             type="text"
@@ -55,7 +81,7 @@ export const LocalImageExplorer: React.FC<LocalImageExplorerProps> = ({
           />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(14, 165, 233, 0.1)', padding: '0.4rem 0.8rem', borderRadius: '8px', border: '1px solid rgba(14, 165, 233, 0.3)' }}>
             <HardDrive size={16} color="#38bdf8" />
             <span style={{ fontSize: '0.85rem', color: '#38bdf8', fontWeight: 600 }}>
@@ -65,18 +91,38 @@ export const LocalImageExplorer: React.FC<LocalImageExplorerProps> = ({
 
           <button className="btn btn-secondary" onClick={onRefresh} disabled={isLoading}>
             <RefreshCw size={14} className={isLoading ? 'spin' : ''} />
-            Refresh Docker Images
+            Refresh
           </button>
         </div>
       </div>
 
       {/* Images Grid / Table */}
       <div className="card">
-        <div className="card-title">
+        <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Layers size={18} color="#0ea5e9" /> Local Docker Desktop Image Library
+            <Layers size={18} color="#0ea5e9" /> Local Docker Image Library
           </span>
-          <span className="badge badge-blue">{filteredImages.length} Discovered</span>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span className="badge badge-blue">
+              {filteredImages.length} Found
+            </span>
+
+            {/* Page size selector */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              <span>Show:</span>
+              <select
+                className="input-field"
+                style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem', width: 'auto', background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+                value={pageSize}
+                onChange={e => setPageSize(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+              >
+                <option value={5}>5 per page</option>
+                <option value={10}>10 per page</option>
+                <option value="all">All images</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         {filteredImages.length === 0 ? (
@@ -86,68 +132,124 @@ export const LocalImageExplorer: React.FC<LocalImageExplorerProps> = ({
             <p style={{ fontSize: '0.8rem', marginTop: '0.35rem' }}>Build or pull an image in Docker Desktop, or click Refresh.</p>
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
-                  <th style={{ padding: '0.75rem 1rem' }}>Image Tag / Repository</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Image ID</th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>Image Size</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Created</th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>Optimization Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredImages.map((img) => {
-                  const isSelected = selectedImage === img.tag;
-                  return (
-                    <tr
-                      key={img.id + img.tag}
-                      style={{
-                        borderBottom: '1px solid var(--border-color)',
-                        background: isSelected ? 'rgba(14, 165, 233, 0.08)' : 'transparent',
-                        transition: 'background 0.2s',
-                      }}
+          <>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
+                    <th style={{ padding: '0.65rem 1rem' }}>Image Tag / Repository</th>
+                    <th style={{ padding: '0.65rem 1rem' }}>Image ID</th>
+                    <th style={{ padding: '0.65rem 1rem', textAlign: 'right' }}>Image Size</th>
+                    <th style={{ padding: '0.65rem 1rem' }}>Created</th>
+                    <th style={{ padding: '0.65rem 1rem', textAlign: 'right' }}>Optimization Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayedImages.map((img) => {
+                    const isSelected = selectedImage === img.tag;
+                    return (
+                      <tr
+                        key={img.id + img.tag}
+                        style={{
+                          borderBottom: '1px solid var(--border-color)',
+                          background: isSelected ? 'rgba(14, 165, 233, 0.08)' : 'transparent',
+                          transition: 'background 0.2s',
+                        }}
+                      >
+                        <td style={{ padding: '0.65rem 1rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, color: '#f8fafc' }}>
+                            <HardDrive size={16} color={isSelected ? '#38bdf8' : 'var(--text-dim)'} />
+                            <code>{img.tag}</code>
+                            {isSelected && <span className="badge badge-blue" style={{ fontSize: '0.65rem' }}>Active</span>}
+                          </div>
+                        </td>
+                        <td style={{ padding: '0.65rem 1rem', color: 'var(--text-dim)', fontFamily: 'monospace' }}>
+                          {img.id.slice(0, 12)}
+                        </td>
+                        <td style={{ padding: '0.65rem 1rem', textAlign: 'right' }}>
+                          {getSizeBadge(img.size_mb)}
+                        </td>
+                        <td style={{ padding: '0.65rem 1rem', color: 'var(--text-dim)', fontSize: '0.8rem' }}>
+                          {img.created ? new Date(img.created).toLocaleDateString() : 'Local build'}
+                        </td>
+                        <td style={{ padding: '0.65rem 1rem', textAlign: 'right' }}>
+                          <button
+                            className={`btn ${isSelected ? 'btn-success' : 'btn-primary'}`}
+                            style={{ padding: '0.35rem 0.8rem', fontSize: '0.8rem' }}
+                            onClick={() => onSelectAndAudit(img.tag)}
+                          >
+                            {isSelected ? (
+                              <>
+                                <CheckCircle2 size={14} /> Selected
+                              </>
+                            ) : (
+                              <>
+                                <Zap size={14} /> Audit & Slim <ArrowRight size={14} />
+                              </>
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination & On-Demand Controls (Avoids Scrollbar) */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '0.75rem 1rem',
+              borderTop: '1px solid var(--border-color)',
+              fontSize: '0.825rem',
+              color: 'var(--text-muted)',
+              flexWrap: 'wrap',
+              gap: '0.5rem'
+            }}>
+              <div>
+                Showing <strong>{startIndex}–{endIndex}</strong> of <strong>{filteredImages.length}</strong> images
+                {filteredImages.length < images.length && ` (filtered from ${images.length} total)`}
+              </div>
+
+              {pageSize !== 'all' && totalPages > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <button
+                    className="btn btn-secondary"
+                    style={{ padding: '0.25rem 0.6rem', fontSize: '0.8rem' }}
+                    disabled={effectivePage <= 1}
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  >
+                    <ChevronLeft size={14} /> Prev
+                  </button>
+
+                  <span style={{ padding: '0 0.4rem', color: 'var(--text-main)', fontWeight: 600 }}>
+                    Page {effectivePage} of {totalPages}
+                  </span>
+
+                  <button
+                    className="btn btn-secondary"
+                    style={{ padding: '0.25rem 0.6rem', fontSize: '0.8rem' }}
+                    disabled={effectivePage >= totalPages}
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  >
+                    Next <ChevronRight size={14} />
+                  </button>
+
+                  {pageSize === 5 && filteredImages.length > 5 && (
+                    <button
+                      className="btn btn-secondary"
+                      style={{ padding: '0.25rem 0.6rem', fontSize: '0.8rem', marginLeft: '0.5rem' }}
+                      onClick={() => setPageSize('all')}
                     >
-                      <td style={{ padding: '0.75rem 1rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, color: '#f8fafc' }}>
-                          <HardDrive size={16} color={isSelected ? '#38bdf8' : 'var(--text-dim)'} />
-                          <code>{img.tag}</code>
-                          {isSelected && <span className="badge badge-blue" style={{ fontSize: '0.65rem' }}>Active</span>}
-                        </div>
-                      </td>
-                      <td style={{ padding: '0.75rem 1rem', color: 'var(--text-dim)', fontFamily: 'monospace' }}>
-                        {img.id.slice(0, 12)}
-                      </td>
-                      <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
-                        {getSizeBadge(img.size_mb)}
-                      </td>
-                      <td style={{ padding: '0.75rem 1rem', color: 'var(--text-dim)', fontSize: '0.8rem' }}>
-                        {img.created ? new Date(img.created).toLocaleDateString() : 'Local build'}
-                      </td>
-                      <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
-                        <button
-                          className={`btn ${isSelected ? 'btn-success' : 'btn-primary'}`}
-                          style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem' }}
-                          onClick={() => onSelectAndAudit(img.tag)}
-                        >
-                          {isSelected ? (
-                            <>
-                              <CheckCircle2 size={14} /> Selected
-                            </>
-                          ) : (
-                            <>
-                              <Zap size={14} /> Audit & Slim <ArrowRight size={14} />
-                            </>
-                          )}
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      Show All ({filteredImages.length})
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>
