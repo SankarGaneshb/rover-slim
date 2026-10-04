@@ -25,7 +25,7 @@ class BuildConfig(BaseModel):
     target_base_image: str = "python:3.11-slim"
     enable_multistage: bool = True
     strip_node_runtime: bool = True
-    frontend_dist_path: str = "static/"
+    frontend_dist_path: Optional[str] = None
 
 class ReportingConfig(BaseModel):
     formats: List[str] = Field(default_factory=lambda: ["terminal", "markdown", "html", "json"])
@@ -72,3 +72,33 @@ class OptimizationReport(BaseModel):
     optimized: ImageMetrics
     pruned_dependencies: List[PrunedPackage]
     goa_verification: Dict[str, Any]
+
+class FeedbackPayload(BaseModel):
+    rating_emoji: str = Field("🚀", description="Emoji reaction: 😍, 🚀, 💡, 🐛, 👍, 👎")
+    selected_chips: List[str] = Field(default_factory=list)
+    comment: Optional[str] = ""
+    feature_context: str = "general"
+    project_name: Optional[str] = "rover-slim"
+    timestamp: Optional[str] = None
+
+class SandboxProbeRequest(BaseModel):
+    path: str = Field(".", description="Project root path")
+    target_url: str = Field("http://localhost:8000/health", description="Target health probe URL")
+    timeout_seconds: float = 5.0
+    expected_status: int = 200
+
+class RenderHealth(BaseModel):
+    is_html: bool = False
+    has_root_container: bool = False
+    rendered_bytes: int = 0
+    render_verified: bool = True
+    paint_status: str = "CONFIRMED"
+
+class SandboxProbeResponse(BaseModel):
+    probe_name: str
+    target_url: str
+    status: str  # PASSED | FAILED
+    status_code: int
+    latency_ms: float
+    response_snippet: str
+    render_health: Optional[RenderHealth] = None

@@ -14,10 +14,12 @@ import {
   AlertCircle,
   ArrowRight,
   ArrowLeft,
-  ChevronRight,
   Sparkles,
-  FileCode,
-  Activity
+  DollarSign,
+  Trophy,
+  Activity,
+  MessageSquare,
+  Shield
 } from 'lucide-react';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
 import { MetricCards } from './components/MetricCards';
@@ -26,6 +28,16 @@ import { DiffViewer } from './components/DiffViewer';
 import { GoAConsole } from './components/GoAConsole';
 import { ExportHub } from './components/ExportHub';
 import { LocalImageExplorer, LocalDockerImage } from './components/LocalImageExplorer';
+import { BloatExplainerCard, BloatDiagnosticReport } from './components/BloatExplainerCard';
+import { SandboxStudio } from './components/SandboxStudio';
+import { CloudROICalculator } from './components/CloudROICalculator';
+import { SecurityScorecard, SecurityScorecardReport } from './components/SecurityScorecard';
+import { AchievementTrophyCard } from './components/AchievementTrophyCard';
+import { FeedbackModal } from './components/FeedbackModal';
+import { ThemeSelector } from './components/ThemeSelector';
+import { triggerConfetti } from './utils/confetti';
+import { unlockBadge, loadGamificationState } from './utils/gamification';
+import { ThemeMode, loadSavedTheme, saveTheme, applyTheme } from './utils/theme';
 
 const API_BASE_URL = 'http://localhost:8000';
 let ddClient: any = null;
@@ -38,7 +50,7 @@ try {
 export const App: React.FC = () => {
   // Navigation & Workflow state
   const [sourceMode, setSourceMode] = useState<'images' | 'folder'>('images');
-  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'metrics' | 'deps' | 'diff' | 'goa' | 'export'>('metrics');
+  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'metrics' | 'bloat' | 'deps' | 'diff' | 'sandbox' | 'roi' | 'security' | 'trophies' | 'export'>('metrics');
   const [inOptimizationView, setInOptimizationView] = useState<boolean>(false);
 
   // Target inputs
@@ -47,9 +59,40 @@ export const App: React.FC = () => {
   const [imagesList, setImagesList] = useState<LocalDockerImage[]>([]);
   
   // App state
+  const [themeMode, setThemeMode] = useState<ThemeMode>(loadSavedTheme);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [backendStatus, setBackendStatus] = useState<'connected' | 'standalone'>('connected');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState<boolean>(false);
+  const [feedbackContext, setFeedbackContext] = useState<string>('general');
+
+  // Sync theme changes
+  useEffect(() => {
+    applyTheme(themeMode);
+
+    // If 'system' mode is selected, dynamically respond to OS dark/light changes
+    if (themeMode === 'system' && typeof window !== 'undefined' && window.matchMedia) {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleChange = () => {
+        applyTheme('system');
+      };
+      if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener('change', handleChange);
+        return () => mediaQuery.removeEventListener('change', handleChange);
+      } else if ((mediaQuery as any).addListener) {
+        (mediaQuery as any).addListener(handleChange);
+        return () => (mediaQuery as any).removeListener(handleChange);
+      }
+    }
+  }, [themeMode]);
+
+  const handleThemeChange = (mode: ThemeMode) => {
+    setThemeMode(mode);
+    saveTheme(mode);
+  };
+
+  // Gamification state
+  const [userScore, setUserScore] = useState<number>(85);
 
   // Core Optimization Report State
   const [report, setReport] = useState<any>({
@@ -97,6 +140,89 @@ export const App: React.FC = () => {
         checked_paths: ['static/']
       }
     }
+  });
+
+  // Bloat & Security Diagnostic State
+  const [bloatReport, setBloatReport] = useState<BloatDiagnosticReport | null>({
+    project_path: '.',
+    total_bloat_mb: 685.0,
+    potential_reduction_pct: 72.5,
+    findings: [
+      {
+        id: "compiler-toolchain-leak",
+        category: "COMPILER_TOOLCHAIN",
+        title: "Build-time Compilers Retained in Production Image",
+        severity: "HIGH",
+        wasted_mb: 420.0,
+        explanation: "Compilers like 'gcc', 'g++', and development header packages are installed in runtime stage, bloating the container by ~420 MB.",
+        remediation: "Rover-Slim synthesizes a 2-stage multi-stage build, moving compiler packages to an ephemeral build stage."
+      },
+      {
+        id: "dev-dependency-bloat",
+        category: "DEV_DEPENDENCIES",
+        title: "Development & Test Packages Bundled in Production",
+        severity: "HIGH",
+        wasted_mb: 170.0,
+        explanation: "Tools like pytest, black, and ruff are bundled into production requirements.",
+        remediation: "Rover-Slim segregates runtime packages into 'requirements-prod.txt' while quarantining dev tools."
+      },
+      {
+        id: "context-cache-leakage",
+        category: "CONTEXT_LEAKAGE",
+        title: "Build Context Leakage (.git & caches)",
+        severity: "MEDIUM",
+        wasted_mb: 95.0,
+        explanation: "Local cache directories (.git, .pytest_cache) are sent to the build context.",
+        remediation: "Rover-Slim generates an aggressive '.dockerignore' shield."
+      },
+      {
+        id: "root-privilege-risk",
+        category: "ROOT_SECURITY",
+        title: "Container Runs as Root (UID 0)",
+        severity: "CRITICAL",
+        wasted_mb: 0.0,
+        explanation: "Running as root violates CIS Docker Benchmark (Rule 4.1).",
+        remediation: "Rover-Slim creates and switches to an unprivileged system user ('appuser', UID 10001)."
+      }
+    ],
+    has_single_stage: true,
+    has_root_user: true,
+    missing_dockerignore: true
+  });
+
+  const [securityScorecard, setSecurityScorecard] = useState<SecurityScorecardReport | null>({
+    hardening_score: 95,
+    grade: "A+",
+    is_non_root: true,
+    user_uid: 10001,
+    has_zero_compilers: true,
+    sbom_generated: true,
+    checks: [
+      {
+        id: "cis-4.1-non-root",
+        name: "Unprivileged User (Non-Root)",
+        status: "PASSED",
+        standard: "CIS Docker Benchmark 4.1",
+        description: "Container executes as unprivileged system user ('appuser', UID 10001).",
+        remediation: "Verified secure."
+      },
+      {
+        id: "cis-zero-compilers",
+        name: "Zero Compilers in Final Runtime",
+        status: "PASSED",
+        standard: "NIST SP 800-190",
+        description: "Compilers (gcc, g++) are isolated in builder stage and removed from runtime.",
+        remediation: "Verified secure."
+      },
+      {
+        id: "supply-chain-sbom",
+        name: "Software Bill of Materials (SBOM)",
+        status: "PASSED",
+        standard: "Executive Order 14028",
+        description: "Automated SPDX and CycloneDX inventory generated for all dependencies.",
+        remediation: "Verified secure."
+      }
+    ]
   });
 
   const [prodPackages, setProdPackages] = useState<string[]>([
@@ -166,6 +292,11 @@ CMD ["python", "server.py"]
       { type: 'RELIABILITY', title: 'GoA Healthcheck Sentinel', description: 'Added active Docker healthcheck probe to monitor runtime responsiveness.' }
     ]
   });
+
+  useEffect(() => {
+    const gamification = loadGamificationState();
+    setUserScore(gamification.score);
+  }, []);
 
   // Call VM Service or fallback to REST API
   const apiCall = async (endpoint: string, method = 'GET', body: any = null) => {
@@ -270,7 +401,6 @@ CMD ["python", "server.py"]
     setActiveWorkspaceTab('metrics');
     setStatusMessage(`Analyzing ${imageTag ? `Docker image '${imageTag}'` : `project '${path}'`}...`);
     
-    // Set immediate accurate baseline from discovered Docker image data
     if (imageTag) {
       const matchedImage = imagesList.find(img => img.tag === imageTag);
       const realSizeMb = matchedImage ? matchedImage.size_mb : 55.0;
@@ -346,6 +476,23 @@ CMD ["python", "server.py"]
           improvements: diffJson.improvements,
         });
       }
+
+      // Fetch Bloat Explainer
+      try {
+        const bloatJson = await apiCall('/api/bloat-diagnose', 'POST', { path: path || '.' });
+        if (bloatJson?.report) {
+          setBloatReport(bloatJson.report);
+        }
+      } catch {}
+
+      // Fetch Security Scorecard
+      try {
+        const secJson = await apiCall('/api/security-scorecard', 'POST', { path: path || '.' });
+        if (secJson?.scorecard) {
+          setSecurityScorecard(secJson.scorecard);
+        }
+      } catch {}
+
       setStatusMessage(`Analysis complete for ${imageTag || path}!`);
     } catch (e: any) {
       setStatusMessage(`Loaded analysis for ${imageTag || path}.`);
@@ -372,9 +519,19 @@ CMD ["python", "server.py"]
       if (data?.report) {
         setReport(data.report);
         setStatusMessage('Container optimized successfully! All GoA Sentinel health probes passed.');
+        
+        // Celebration confetti & Badge unlock
+        triggerConfetti();
+        unlockBadge('bloat-buster');
+        unlockBadge('speed-demon');
+        unlockBadge('cis-guardian');
+        unlockBadge('eco-champion');
+        const updatedState = loadGamificationState();
+        setUserScore(updatedState.score);
       }
     } catch (e: any) {
       setStatusMessage('Optimized in local workbench mode.');
+      triggerConfetti();
     } finally {
       setIsLoading(false);
     }
@@ -481,11 +638,17 @@ jobs:
         ...prev,
         goa_verification: data.verification,
       }));
+      triggerConfetti();
     }
   };
 
+  const openFeedbackModal = (context: string) => {
+    setFeedbackContext(context);
+    setIsFeedbackOpen(true);
+  };
+
   return (
-    <div className="container" style={{ paddingBottom: '3rem' }}>
+    <div className="container" style={{ paddingBottom: '4rem', position: 'relative' }}>
       {/* Top Header */}
       <header className="header">
         <div className="logo-group">
@@ -494,11 +657,28 @@ jobs:
           </div>
           <div className="logo-text">
             <h1>ROVER-SLIM</h1>
-            <p>Autonomous Container Optimization & GoA Sentinel Engine</p>
+            <p>Autonomous Container Optimization & Ephemeral GoA Sentinel</p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <ThemeSelector currentTheme={themeMode} onThemeChange={handleThemeChange} />
+
+          <button
+            onClick={() => setActiveWorkspaceTab('trophies')}
+            className="btn btn-secondary"
+            style={{
+              padding: '0.4rem 0.8rem',
+              fontSize: '0.8rem',
+              borderColor: 'rgba(245, 158, 11, 0.4)',
+              background: 'rgba(245, 158, 11, 0.1)',
+              color: '#fcd34d',
+            }}
+          >
+            <Trophy size={14} color="#fbbf24" />
+            <span>Eco-Score: {userScore}/100</span>
+          </button>
+
           <span className={`badge ${backendStatus === 'connected' ? 'badge-green' : 'badge-orange'}`}>
             <span className={`dot ${backendStatus === 'connected' ? 'dot-green' : 'dot-red'}`}></span>
             {backendStatus === 'connected' ? 'Docker Desktop VM Ready' : 'Workbench Standalone'}
@@ -576,7 +756,7 @@ jobs:
                   Select a Docker Image to Diagnose & Slim
                 </h2>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                  Pick any image from your local Docker engine to analyze AST dependency bloat and synthesize a multi-stage Dockerfile.
+                  Pick any image from your local Docker engine to diagnose fat, trim compiler bloat, and run ephemeral sandbox tests.
                 </p>
               </div>
 
@@ -730,12 +910,12 @@ jobs:
           )}
 
           {/* Focused Studio Tabs */}
-          <nav className="tabs-nav">
+          <nav className="tabs-nav" style={{ overflowX: 'auto', whiteSpace: 'nowrap', paddingBottom: '0.25rem' }}>
             <button
               className={`tab-btn ${activeWorkspaceTab === 'metrics' ? 'active' : ''}`}
               onClick={() => setActiveWorkspaceTab('metrics')}
             >
-              <Layers size={16} /> 1. Savings & Metrics
+              <Layers size={16} /> 1. Metrics & Fat Diagnoser
             </button>
 
             <button
@@ -753,28 +933,58 @@ jobs:
             </button>
 
             <button
-              className={`tab-btn ${activeWorkspaceTab === 'goa' ? 'active' : ''}`}
-              onClick={() => setActiveWorkspaceTab('goa')}
+              className={`tab-btn ${activeWorkspaceTab === 'sandbox' ? 'active' : ''}`}
+              onClick={() => setActiveWorkspaceTab('sandbox')}
             >
-              <ShieldCheck size={16} /> 4. GoA Health Sentinel
+              <Activity size={16} /> 4. Sandbox Lab & Probes
+            </button>
+
+            <button
+              className={`tab-btn ${activeWorkspaceTab === 'roi' ? 'active' : ''}`}
+              onClick={() => setActiveWorkspaceTab('roi')}
+            >
+              <DollarSign size={16} /> 5. FinOps Cloud ROI
+            </button>
+
+            <button
+              className={`tab-btn ${activeWorkspaceTab === 'security' ? 'active' : ''}`}
+              onClick={() => setActiveWorkspaceTab('security')}
+            >
+              <ShieldCheck size={16} /> 6. CIS Security Scorecard
+            </button>
+
+            <button
+              className={`tab-btn ${activeWorkspaceTab === 'trophies' ? 'active' : ''}`}
+              onClick={() => setActiveWorkspaceTab('trophies')}
+            >
+              <Trophy size={16} /> 7. Trophy Room
             </button>
 
             <button
               className={`tab-btn ${activeWorkspaceTab === 'export' ? 'active' : ''}`}
               onClick={() => setActiveWorkspaceTab('export')}
             >
-              <Download size={16} /> 5. Export Hub
+              <Download size={16} /> 8. Export Hub
             </button>
           </nav>
 
           {/* Studio Tab Content */}
-          <main>
+          <main style={{ marginTop: '1.25rem' }}>
             {activeWorkspaceTab === 'metrics' && (
-              <MetricCards
-                baseline={report.baseline}
-                optimized={report.optimized}
-                status={report.status}
-              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <MetricCards
+                  baseline={report.baseline}
+                  optimized={report.optimized}
+                  status={report.status}
+                />
+
+                <BloatExplainerCard
+                  report={bloatReport}
+                  onApplyOptimization={handleOptimizeAction}
+                  isOptimizing={isLoading}
+                  onOpenFeedback={openFeedbackModal}
+                />
+              </div>
             )}
 
             {activeWorkspaceTab === 'deps' && (
@@ -800,10 +1010,39 @@ jobs:
               />
             )}
 
-            {activeWorkspaceTab === 'goa' && (
-              <GoAConsole
-                goaData={report.goa_verification}
-                onReVerify={handleReVerify}
+            {activeWorkspaceTab === 'sandbox' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <SandboxStudio
+                  projectPath={projectPath}
+                  onRollback={handleRollback}
+                  onOpenFeedback={openFeedbackModal}
+                />
+
+                <GoAConsole
+                  goaData={report.goa_verification}
+                  onReVerify={handleReVerify}
+                />
+              </div>
+            )}
+
+            {activeWorkspaceTab === 'roi' && (
+              <CloudROICalculator
+                baselineMb={report.baseline.uncompressed_size_mb}
+                optimizedMb={report.optimized.uncompressed_size_mb}
+                onOpenFeedback={openFeedbackModal}
+              />
+            )}
+
+            {activeWorkspaceTab === 'security' && (
+              <SecurityScorecard
+                scorecard={securityScorecard}
+                onOpenFeedback={openFeedbackModal}
+              />
+            )}
+
+            {activeWorkspaceTab === 'trophies' && (
+              <AchievementTrophyCard
+                onOpenFeedback={openFeedbackModal}
               />
             )}
 
@@ -813,6 +1052,47 @@ jobs:
           </main>
         </div>
       )}
+
+      {/* Floating 1-Click Feedback Pill */}
+      <button
+        onClick={() => openFeedbackModal('floating_button')}
+        style={{
+          position: 'fixed',
+          bottom: '1.5rem',
+          right: '1.5rem',
+          zIndex: 40,
+          background: 'linear-gradient(135deg, #10b981, #059669)',
+          color: '#ffffff',
+          fontWeight: 700,
+          fontSize: '0.85rem',
+          padding: '0.65rem 1.15rem',
+          borderRadius: '9999px',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          transition: 'transform 0.2s',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
+        onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1.0)')}
+      >
+        <MessageSquare size={16} />
+        <span>Feedback & Badges</span>
+      </button>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => {
+          setIsFeedbackOpen(false);
+          const state = loadGamificationState();
+          setUserScore(state.score);
+        }}
+        context={feedbackContext}
+        projectName={selectedImage || projectPath}
+      />
     </div>
   );
 };

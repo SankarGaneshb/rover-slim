@@ -3,7 +3,7 @@ Rover-Slim: Autonomous Container Optimization, AST Dependency Segregation,
 and Green-on-Arrival (GoA) Sentinel Verification Engine.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 from rover_slim.models import RoverSlimConfig, OptimizationReport
 from rover_slim.core.engine import RoverSlimEngine

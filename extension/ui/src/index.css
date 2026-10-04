@@ -1,4 +1,9 @@
-:root {
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root,
+[data-theme="rover-custom"] {
   --bg-main: #0b0f19;
   --bg-card: #131b2e;
   --bg-card-hover: #1a243d;
@@ -17,6 +22,53 @@
   --accent-orange: #f59e0b;
   --accent-red: #ef4444;
   --accent-purple: #8b5cf6;
+  --code-bg: #090d16;
+}
+
+/* Docker Desktop Standard Dark Theme */
+[data-theme="dark"] {
+  --bg-main: #181c24;
+  --bg-card: #202634;
+  --bg-card-hover: #293042;
+  --bg-card-secondary: #14171f;
+  --border-color: #313a4d;
+  --border-focus: #1976d2;
+  
+  --text-main: #f0f4f8;
+  --text-muted: #a0aec0;
+  --text-dim: #718096;
+  
+  --accent-blue: #1976d2;
+  --accent-blue-glow: rgba(25, 118, 210, 0.2);
+  --accent-green: #2e7d32;
+  --accent-green-glow: rgba(46, 125, 50, 0.2);
+  --accent-orange: #ed6c02;
+  --accent-red: #d32f2f;
+  --accent-purple: #9c27b0;
+  --code-bg: #11141c;
+}
+
+/* Docker Desktop Standard Light Theme */
+[data-theme="light"] {
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --bg-card-secondary: #f3f6f9;
+  --border-color: #e2e8f0;
+  --border-focus: #0284c7;
+  
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #64748b;
+  
+  --accent-blue: #0284c7;
+  --accent-blue-glow: rgba(2, 132, 199, 0.15);
+  --accent-green: #059669;
+  --accent-green-glow: rgba(5, 150, 105, 0.15);
+  --accent-orange: #d97706;
+  --accent-red: #dc2626;
+  --accent-purple: #7c3aed;
+  --code-bg: #f1f5f9;
 }
 
 * {
@@ -306,14 +358,14 @@ body {
 
 /* Code Block */
 pre.code-view {
-  background: #090d16;
+  background: var(--code-bg);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 1rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.85rem;
   line-height: 1.5;
-  color: #e2e8f0;
+  color: var(--text-main);
   overflow-x: auto;
   max-height: 450px;
 }

@@ -47,6 +47,8 @@ ENV PATH="/home/appuser/.local/bin:$PATH" \
 # Copy application source code with non-root ownership
 COPY --chown=appuser:appuser . .
 
+
+
 USER appuser
 
 EXPOSE 8000

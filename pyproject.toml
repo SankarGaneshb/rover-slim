@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rover-slim"
-version = "1.0.0"
+version = "1.1.0"
 description = "Autonomous container optimization, AST dependency pruning, and Green-on-Arrival verification engine."
 readme = "README.md"
 authors = [{ name = "Sankar Ganesh", email = "bsankarganesh@users.noreply.github.com" }]

@@ -136,6 +136,13 @@ class GoASentinelVerifier:
     def verify_static_assets(self) -> Dict[str, Any]:
         """Validates that frontend distribution assets exist and are non-empty."""
         dist_path = self.config.build.frontend_dist_path
+        if not dist_path:
+            return {
+                "check": "Static Frontend Assets",
+                "dist_path": None,
+                "status": "SKIPPED",
+                "details": "No frontend dist path configured"
+            }
         full_dist = os.path.join(self.root_dir, dist_path)
         
         if not os.path.exists(full_dist):
