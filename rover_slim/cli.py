@@ -27,6 +27,25 @@ app = typer.Typer(
 )
 console = Console(highlight=False)
 
+def version_callback(value: bool):
+    if value:
+        from rover_slim import __version__
+        console.print(f"[bold cyan]Rover-Slim[/bold cyan] version [bold green]{__version__}[/bold green]")
+        raise typer.Exit()
+
+@app.callback()
+def main(
+    version: Optional[bool] = typer.Option(
+        None,
+        "--version",
+        "-v",
+        help="Show Rover-Slim version and exit.",
+        callback=version_callback,
+        is_eager=True,
+    )
+):
+    pass
+
 def _validate_path(path: str):
     if not os.path.exists(path):
         console.print(f"[bold red]Error: Target path '{path}' does not exist.[/bold red]")
