@@ -64,7 +64,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Rover-Slim Extension API",
         description="Backend API for Docker Desktop Rover-Slim Extension",
-        version="1.0.0"
+        version="1.1.0"
     )
 
     # Enable CORS for Docker Desktop web client
@@ -80,7 +80,7 @@ def create_app() -> FastAPI:
     def health_check():
         return {
             "status": "healthy",
-            "version": "1.0.0",
+            "version": "1.1.0",
             "engine": "Rover-Slim Container Optimization Engine",
             "python_version": "3.13"
         }

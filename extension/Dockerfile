@@ -73,6 +73,6 @@ LABEL org.opencontainers.image.title="Rover-Slim" \
       com.docker.extension.detailed-description="Rover-Slim analyzes Python AST code trees, segregates dev dependencies, synthesizes lean multi-stage Dockerfiles, and guarantees Green-on-Arrival container health." \
       com.docker.extension.publisher-url="https://github.com/SankarGaneshb/rover-slim" \
       com.docker.extension.additional-urls='[{"title":"Documentation","url":"https://github.com/SankarGaneshb/rover-slim"}]' \
-      com.docker.extension.changelog="v1.0.0 Self-Optimized Multi-Stage Release."
+      com.docker.extension.changelog="v1.1.0 Polyglot AST Architecture, Bloat Diagnoser, FinOps ROI & CIS Security Release."
 
 CMD ["uvicorn", "rover_slim.server.app:app", "--host", "0.0.0.0", "--port", "8000"]

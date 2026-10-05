@@ -1,8 +1,9 @@
 # 🚀 Rover-Slim: Autonomous Container Optimization Engine & Docker Desktop Extension
 
+[![Install in Docker Desktop](https://img.shields.io/badge/Docker%20Desktop-Install%20Extension-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://open.docker.com/extensions/marketplace?extensionId=bsankarganesh/rover-slim-extension&tag=latest)
 [![CI Test Suite](https://github.com/SankarGaneshb/rover-slim/actions/workflows/ci.yml/badge.svg)](https://github.com/SankarGaneshb/rover-slim/actions)
 [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](https://github.com/SankarGaneshb/rover-slim)
-[![Docker Desktop Extension](https://img.shields.io/badge/Docker%20Extension-v1.0.0-blue.svg)](https://hub.docker.com/r/bsankarganesh/rover-slim-extension)
+[![Docker Extension](https://img.shields.io/badge/Docker%20Extension-v1.1.0-blue.svg)](https://open.docker.com/extensions/marketplace?extensionId=bsankarganesh/rover-slim-extension&tag=latest)
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -42,9 +43,14 @@
 
 ## 🐳 Docker Desktop Extension
 
-### 1. Install via Docker Desktop CLI
+### 1. One-Click Install in Docker Desktop
+Click below to open Docker Desktop directly and install Rover-Slim:
+
+[![Install in Docker Desktop](https://img.shields.io/badge/Docker%20Desktop-Install%20Extension-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://open.docker.com/extensions/marketplace?extensionId=bsankarganesh/rover-slim-extension&tag=latest)
+
+Or install via Docker CLI:
 ```bash
-docker extension install bsankarganesh/rover-slim-extension:1.0.0
+docker extension install bsankarganesh/rover-slim-extension:latest
 ```
 
 ### 2. Launch the Extension
