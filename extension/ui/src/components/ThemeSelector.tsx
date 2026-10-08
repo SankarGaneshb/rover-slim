@@ -19,19 +19,19 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ currentTheme, onTh
       id: 'light',
       label: 'Light',
       icon: <Sun size={14} />,
-      tooltip: 'Standard Docker Desktop Light Theme',
+      tooltip: 'Standard Light Theme',
     },
     {
       id: 'dark',
       label: 'Dark',
       icon: <Moon size={14} />,
-      tooltip: 'Standard Docker Desktop Dark Theme',
+      tooltip: 'Standard Dark Theme',
     },
     {
       id: 'system',
       label: 'System',
       icon: <Laptop size={14} />,
-      tooltip: 'Use System / Docker Desktop Settings',
+      tooltip: 'Use System / Host Settings',
     },
   ];
 

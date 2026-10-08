@@ -63,11 +63,11 @@ class ROIRequest(BaseModel):
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Rover-Slim Extension API",
-        description="Backend API for Docker Desktop Rover-Slim Extension",
+        description="Backend API for Desktop Rover-Slim Extension",
         version="1.1.0"
     )
 
-    # Enable CORS for Docker Desktop web client
+    # Enable CORS for Desktop web client
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -87,7 +87,7 @@ def create_app() -> FastAPI:
 
     @app.get("/api/images")
     def list_docker_images():
-        """Lists local Docker images available in Docker Desktop."""
+        """Lists local Docker images available in the container runtime."""
         images_list = []
         try:
             import docker

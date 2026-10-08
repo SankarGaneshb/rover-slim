@@ -129,7 +129,7 @@ export const LocalImageExplorer: React.FC<LocalImageExplorerProps> = ({
           <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--text-dim)' }}>
             <AlertCircle size={32} color="var(--text-dim)" style={{ margin: '0 auto 0.75rem' }} />
             <p style={{ fontSize: '0.95rem', color: 'var(--text-muted)' }}>No local Docker images found matching "{search}".</p>
-            <p style={{ fontSize: '0.8rem', marginTop: '0.35rem' }}>Build or pull an image in Docker Desktop, or click Refresh.</p>
+            <p style={{ fontSize: '0.8rem', marginTop: '0.35rem' }}>Build or pull an image in your Desktop environment, or click Refresh.</p>
           </div>
         ) : (
           <>

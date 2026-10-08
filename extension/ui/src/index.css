@@ -25,7 +25,7 @@
   --code-bg: #090d16;
 }
 
-/* Docker Desktop Standard Dark Theme */
+/* Desktop Standard Dark Theme */
 [data-theme="dark"] {
   --bg-main: #181c24;
   --bg-card: #202634;
@@ -48,7 +48,7 @@
   --code-bg: #11141c;
 }
 
-/* Docker Desktop Standard Light Theme */
+/* Desktop Standard Light Theme */
 [data-theme="light"] {
   --bg-main: #f8fafc;
   --bg-card: #ffffff;

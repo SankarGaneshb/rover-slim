@@ -1,4 +1,4 @@
-# 🚀 Rover-Slim: Autonomous Container Optimization Engine & Docker Desktop Extension
+# 🚀 Rover-Slim: Autonomous Container Optimization Engine & Docker & Rancher Desktop Extension
 
 [![Install in Docker Desktop](https://img.shields.io/badge/Docker%20Desktop-Install%20Extension-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://open.docker.com/extensions/marketplace?extensionId=bsankarganesh/rover-slim-extension&tag=latest)
 [![CI Test Suite](https://github.com/SankarGaneshb/rover-slim/actions/workflows/ci.yml/badge.svg)](https://github.com/SankarGaneshb/rover-slim/actions)
@@ -7,11 +7,11 @@
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Rover-Slim** is an intelligent, source-first container optimization engine and official **Docker Desktop Extension** that analyzes application Abstract Syntax Trees (AST), automatically segregates development bloat from minimal production dependencies, synthesizes hardened multi-stage Dockerfiles, and guarantees zero runtime breakage via **Green-on-Arrival (GoA)** Sentinel health checks.
+**Rover-Slim** is an intelligent, source-first container optimization engine and official **Docker & Rancher Desktop Extension** that analyzes application Abstract Syntax Trees (AST), automatically segregates development bloat from minimal production dependencies, synthesizes hardened multi-stage Dockerfiles, and guarantees zero runtime breakage via **Green-on-Arrival (GoA)** Sentinel health checks.
 
 ---
 
-## 📸 Docker Desktop Extension Dashboard
+## 📸 Docker & Rancher Desktop Extension Dashboard
 
 ![Rover-Slim Dashboard](docs/dashboard.png)
 
@@ -23,7 +23,7 @@
 - **🏗️ Deterministic Multi-Stage Synthesis**: Synthesizes 2-stage and 3-stage minimal multi-arch Dockerfiles running under unprivileged non-root users (`appuser`, UID `10001`).
 - **🛡️ Context Shielding (`.dockerignore`)**: Automatically detects and shields build contexts from heavy test caches, `.git`, `node_modules`, and local state.
 - **⚡ Green-on-Arrival (GoA) Sentinel**: Boots ephemeral container sandboxes to verify startup integrity, validate active HTTP health probes (`/health`), and verify static asset graphs before final deployment.
-- **🐳 Docker Desktop Extension Workbench**: Interactive visual studio featuring live KPI gauges, 2-column drag-and-drop dependency classifier, side-by-side Monaco diff inspector, 1-click **Apply** with safety checkpoint rollback, and export hub.
+- **🐳 Docker & Rancher Desktop Extension Workbench**: Interactive visual studio featuring live KPI gauges, 2-column drag-and-drop dependency classifier, side-by-side Monaco diff inspector, 1-click **Apply** with safety checkpoint rollback, and export hub.
 - **🤖 Model Context Protocol (MCP) Server**: Built-in stdio MCP server for agentic IDEs (Antigravity, Cursor, Claude Desktop).
 
 ---
@@ -41,7 +41,7 @@
 
 ---
 
-## 🐳 Docker Desktop Extension
+## 🐳 Docker & Rancher Desktop Extension
 
 ### 1. One-Click Install in Docker Desktop
 Click below to open Docker Desktop directly and install Rover-Slim:
@@ -180,3 +180,15 @@ cd extension/ui && npm test
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).
+
+### 2. Install in Rancher Desktop
+Rover-Slim natively supports Rancher Desktop (via its Docker-compatible extension architecture).
+
+1. Start Rancher Desktop (with the **dockerd (Moby)** container engine enabled in Preferences).
+2. Install via the CLI:
+   ``bash
+   rdctl extension install bsankarganesh/rover-slim-extension:latest
+   ``
+3. Open the **Rancher Desktop UI**, navigate to the **Extensions** tab, and click **Rover Slim**!
+
+> *Note: We are actively submitting Rover Slim to the official Rancher Desktop Extension Catalog for 1-click UI installations.*

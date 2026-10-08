@@ -65,3 +65,21 @@ jobs:
           push: true
           tags: ${{ steps.meta-core.outputs.tags }}
           labels: ${{ steps.meta-core.outputs.labels }}
+
+      - name: Update Docker Hub Extension Description & Overview
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ secrets.DOCKERHUB_USERNAME }}/rover-slim-extension
+          short-description: "Autonomous container optimization, AST dependency segregation, and GoA Sentinel verification Docker Desktop Extension."
+          readme-filepath: ./README.md
+
+      - name: Update Docker Hub Core Engine Description & Overview
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ secrets.DOCKERHUB_USERNAME }}/rover-slim
+          short-description: "Autonomous container optimization, AST dependency segregation, and Green-on-Arrival engine."
+          readme-filepath: ./README.md

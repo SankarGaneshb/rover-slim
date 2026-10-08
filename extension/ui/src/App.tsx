@@ -44,7 +44,7 @@ let ddClient: any = null;
 try {
   ddClient = createDockerDesktopClient();
 } catch (e) {
-  console.warn('Running outside Docker Desktop client environment:', e);
+  console.warn('Running outside Desktop client environment:', e);
 }
 
 export const App: React.FC = () => {
@@ -592,7 +592,7 @@ ${report.pruned_dependencies && report.pruned_dependencies.length > 0
   : isLean ? '* Minimal Alpine container runtime. Zero unused dev dependencies.' : '* Clean production dependencies segregated.'}
 
 ---
-*Optimized autonomously with Rover-Slim Docker Desktop Extension*`;
+*Optimized autonomously with Rover-Slim Desktop Extension*`;
     } else if (format === 'github_action') {
       return `name: Rover-Slim Container Optimization & GoA Sentinel
 
@@ -681,7 +681,7 @@ jobs:
 
           <span className={`badge ${backendStatus === 'connected' ? 'badge-green' : 'badge-orange'}`}>
             <span className={`dot ${backendStatus === 'connected' ? 'dot-green' : 'dot-red'}`}></span>
-            {backendStatus === 'connected' ? 'Docker Desktop VM Ready' : 'Workbench Standalone'}
+            {backendStatus === 'connected' ? 'Desktop VM Ready' : 'Workbench Standalone'}
           </span>
         </div>
       </header>
