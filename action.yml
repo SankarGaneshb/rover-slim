@@ -1,5 +1,5 @@
 name: "Rover-Slim Container Optimization & Governance"
-description: "Autonomously audits, optimizes, and verifies Docker containers for zero waste, AST dependency segregation, and fast cold starts."
+description: "Audit, optimize, and shrink Docker containers via AST dependency pruning, multi-stage builds, and GoA sentinel checks."
 author: "Market-Rover SRE Team"
 branding:
   icon: "zap"
