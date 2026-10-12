@@ -3,7 +3,8 @@
 [![Install in Docker Desktop](https://img.shields.io/badge/Docker%20Desktop-Install%20Extension-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://open.docker.com/extensions/marketplace?extensionId=bsankarganesh/rover-slim-extension&tag=latest)
 [![CI Test Suite](https://github.com/SankarGaneshb/rover-slim/actions/workflows/ci.yml/badge.svg)](https://github.com/SankarGaneshb/rover-slim/actions)
 [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](https://github.com/SankarGaneshb/rover-slim)
-[![Docker Extension](https://img.shields.io/badge/Docker%20Extension-v1.1.0-blue.svg)](https://open.docker.com/extensions/marketplace?extensionId=bsankarganesh/rover-slim-extension&tag=latest)
+[![Extension Release](https://img.shields.io/badge/Extension-v1.1.0-blue.svg)](https://github.com/SankarGaneshb/rover-slim/releases/tag/v1.1.0)
+[![Install in Rancher Desktop](https://img.shields.io/badge/Rancher%20Desktop-Install%20Extension-0075A8?style=for-the-badge&logo=suse&logoColor=white)](https://github.com/rancher-sandbox/rancher-desktop/pull/11115)
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -43,7 +44,14 @@
 
 ## 🐳 Docker & Rancher Desktop Extension
 
-### 1. One-Click Install in Docker Desktop
+### 1. Install in Rancher Desktop
+Install directly via the Rancher Desktop CLI (`rdctl`):
+```bash
+rdctl extension install bsankarganesh/rover-slim-extension:latest
+```
+*Or discover in the **Extensions → Catalog** tab once the [official catalog PR #11115](https://github.com/rancher-sandbox/rancher-desktop/pull/11115) merges!*
+
+### 2. Install in Docker Desktop
 Click below to open Docker Desktop directly and install Rover-Slim:
 
 [![Install in Docker Desktop](https://img.shields.io/badge/Docker%20Desktop-Install%20Extension-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://open.docker.com/extensions/marketplace?extensionId=bsankarganesh/rover-slim-extension&tag=latest)
@@ -53,10 +61,10 @@ Or install via Docker CLI:
 docker extension install bsankarganesh/rover-slim-extension:latest
 ```
 
-### 2. Launch the Extension
-Open **Docker Desktop** and click **Rover Slim** in the left navigation sidebar!
+### 3. Launch the Extension
+Open **Rancher Desktop** or **Docker Desktop** and click **Rover Slim** in the left navigation sidebar!
 
-### 3. Extension Features
+### 4. Extension Features
 - **Library Discovery**: Select local Docker images or project repositories.
 - **Interactive Matrix**: Review and customize package splits (Production vs. Development).
 - **Diff Inspector**: Inspect generated multi-stage Dockerfiles side-by-side.
