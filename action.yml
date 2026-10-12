@@ -53,7 +53,7 @@ runs:
     - name: Install Rover-Slim
       shell: bash
       run: |
-        pip install rover-slim
+        pip install "${{ github.action_path }}"
 
     - name: Run Rover-Slim Container Optimization
       id: run-rover-slim
