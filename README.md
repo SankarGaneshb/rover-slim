@@ -1,6 +1,7 @@
 # 🚀 Rover-Slim: Autonomous Container Optimization Engine & Docker & Rancher Desktop Extension
 
 [![Install in Docker Desktop](https://img.shields.io/badge/Docker%20Desktop-Install%20Extension-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://open.docker.com/extensions/marketplace?extensionId=bsankarganesh/rover-slim-extension&tag=latest)
+[![GitHub Action](https://img.shields.io/badge/GitHub%20Action-v1-2088FF?style=flat&logo=githubactions&logoColor=white)](https://github.com/SankarGaneshb/rover-slim/releases/tag/v1.1.1)
 [![CI Test Suite](https://github.com/SankarGaneshb/rover-slim/actions/workflows/ci.yml/badge.svg)](https://github.com/SankarGaneshb/rover-slim/actions)
 [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](https://github.com/SankarGaneshb/rover-slim)
 [![Extension Release](https://img.shields.io/badge/Extension-v1.1.0-blue.svg)](https://github.com/SankarGaneshb/rover-slim/releases/tag/v1.1.0)
