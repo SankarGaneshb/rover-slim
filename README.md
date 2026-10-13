@@ -27,7 +27,7 @@
 - **🛡️ Context Shielding (`.dockerignore`)**: Automatically detects and shields build contexts from heavy test caches, `.git`, `node_modules`, and local state.
 - **⚡ Green-on-Arrival (GoA) Sentinel**: Boots ephemeral container sandboxes to verify startup integrity, validate active HTTP health probes (`/health`), and verify static asset graphs before final deployment.
 - **🐳 Docker & Rancher Desktop Extension Workbench**: Interactive visual studio featuring live KPI gauges, 2-column drag-and-drop dependency classifier, side-by-side Monaco diff inspector, 1-click **Apply** with safety checkpoint rollback, and export hub.
-- **🤖 Model Context Protocol (MCP) Server**: Built-in stdio MCP server for agentic IDEs (Antigravity, Cursor, Claude Desktop).
+- **🤖 Model Context Protocol (MCP) Server**: Built-in stdio MCP server for agentic IDEs (Antigravity, Cursor, Claude Desktop), officially listed on [M8ven MCP Registry & Trust Index](https://m8ven.ai/mcp/sankarganeshb/rover-slim) as a **Verified Publisher** with full safety tool annotations.
 
 ---
 
@@ -128,7 +128,12 @@ rover-slim rollback .
 
 ## 🤖 Model Context Protocol (MCP) Server
 
-Rover-Slim includes a native Model Context Protocol (MCP) server for integration with agentic coding environments:
+[![M8ven Trust Index](https://m8ven.ai/badge/mcp/sankarganeshb/rover-slim?variant=verified)](https://m8ven.ai/mcp/sankarganeshb/rover-slim?s=readme)
+[![M8ven Verified Publisher](https://img.shields.io/badge/M8ven-Verified%20Publisher-10B981?style=flat&logo=checkmarx&logoColor=white)](https://m8ven.ai/mcp/sankarganeshb/rover-slim)
+
+Rover-Slim is an officially listed and verified server on the **[M8ven MCP Registry & Trust Index](https://m8ven.ai/mcp/sankarganeshb/rover-slim)** under **Verified Publisher** status (`@SankarGaneshb`), continuously monitored for security, stability, and MCP schema compliance.
+
+It includes a native Model Context Protocol (MCP) server for seamless integration with agentic coding environments (Antigravity, Cursor, Claude Desktop, Windsurf):
 
 ```json
 {
