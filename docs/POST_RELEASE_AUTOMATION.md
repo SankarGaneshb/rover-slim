@@ -13,25 +13,27 @@ This document provides:
 
 ## 2. Retrospective: Activities Performed in Past Releases
 
-| Release Activity | v1.0.0 | v1.1.0 | v1.1.1 | v1.1.2 | Current Execution Model |
-| :--- | :---: | :---: | :---: | :---: | :--- |
-| **Multi-Arch Docker Build & Push** (`amd64`/`arm64`) | ✅ | ✅ | ✅ | ✅ | **Automated** in `.github/workflows/release-extension.yml` |
-| **Docker Hub Overview & Readme Sync** | ❌ (Manual) | ❌ (Manual) | ✅ | ✅ | **Automated** via `peter-evans/dockerhub-description@v4` |
-| **GitHub Release & Changelog Notes** | ❌ (Manual) | ❌ (Manual) | ❌ (Manual) | ❌ (Manual) | **Manual** (Created via `gh release create` / web UI) |
-| **GitHub Action Floating Tag (`v1`) Sync** | N/A | N/A | ❌ (Manual) | ⚠️ **Missed** | **Manual** (Currently stuck on commit `1196db5` / v1.1.1) |
-| **Live Registry Smoke Test** (Pull verification) | ❌ (Local) | ❌ (Local) | ❌ (Local) | ❌ (Local) | **Manual** (User checks `docker pull` or `rdctl extension`) |
-| **M8ven Trust Index / Directory Refresh** | N/A | N/A | N/A | ❌ (Manual) | **Manual** (Visiting `m8ven.ai` / manual re-scrape) |
-| **Community Distribution & Outreach** | ❌ (None) | 📄 Playbook | 📄 Playbook | 📄 Playbook | **Manual** (Copying text from `docs/LAUNCH_PLAYBOOK.md`) |
-| **Demo Walkthrough & Asset Update** | ❌ | 📄 Script | 📄 Script | 📄 Script | **Manual** (`docs/DEMO_RECORDING_SCRIPT.md`) |
+| Release Activity | v1.0.0 | v1.1.0 | v1.1.1 | v1.1.2 (Current) | Future Model (v1.1.3+) | Workflow Type |
+| :--- | :---: | :---: | :---: | :---: | :--- | :--- |
+| **Multi-Arch Docker Build & Push** (`amd64`/`arm64`) | ✅ | ✅ | ✅ | ✅ **Live** (`1.1.2`, `1.1`, `latest`) | **100% Automated** | Autonomous CI |
+| **Docker Hub Overview & Readme Sync** | ❌ Manual | ❌ Manual | ✅ | ✅ **Synced** | **100% Automated** | Autonomous CI |
+| **GitHub Action Floating Tag (`v1`) Sync** | N/A | N/A | ⚠️ Manual | ✅ **Resolved** (Synced to `00b7c58`) | **100% Automated** (`sync-floating-tags` job) | Autonomous CI |
+| **Live Registry Smoke Test** (Pull verification) | ❌ Manual | ❌ Manual | ❌ Manual | ✅ **Verified** via Docker Hub Registry | **100% Automated** (`smoke-test-and-stage` job) | Autonomous Cloud Runner |
+| **GitHub Release & Changelog Notes** | ❌ Manual | ❌ Manual | ❌ Manual | ✅ **Published** ([Release notes](https://github.com/SankarGaneshb/rover-slim/releases/tag/v1.1.2)) | **Automated Draft + 1-Click HIL Approval** | Human-in-the-Loop Gate |
+| **M8ven Trust Index / Directory Refresh** | N/A | N/A | N/A | ✅ **Implemented** (4 Hint Tuples live) | **100% Automated** (Directory webhook ping) | Autonomous Post-Approval |
+| **Community Distribution & Outreach** | ❌ None | 📄 Playbook | 📄 Playbook | 📄 **Ready** in `LAUNCH_PLAYBOOK.md` | **Pre-rendered Launch Cards + HIL Publish** | Human-in-the-Loop |
+| **Demo Walkthrough & Asset Update** | ❌ None | 📄 Script | 📄 Script | 📄 **Tracked** (`DEMO_RECORDING_SCRIPT.md`) | **Manual HIL** (Triggered on major UI changes) | Human-in-the-Loop |
 
-### Key Observations & Friction Points:
-1. **The Floating Tag Drift**:
-   - In `v1.1.1`, the `v1` tag was manually updated so `uses: SankarGaneshb/rover-slim@v1` worked.
-   - In `v1.1.2`, the tag was created as `v1.1.2`, but `v1` was not moved forward. Any consumer pointing to `@v1` is still on `v1.1.1`.
-2. **Uncertainty on Local Execution**:
-   - Because CI ends right after pushing to Docker Hub without a live validation step, developers wonder whether local commands (`rdctl extension install`, `docker pull`) need to be run.
-3. **Manual Release Note Drafting**:
-   - Release titles, changelog categorization, and asset references were assembled manually rather than derived from semantic commit messages.
+### Key Observations & Improvements Applied:
+1. **Floating Tag Drift Eliminated**:
+   - The `v1` tag was updated immediately to point to `00b7c58` (`v1.1.2`), restoring parity for consumers of `uses: SankarGaneshb/rover-slim@v1`.
+   - Starting in `v1.1.3`, the automated `sync-floating-tags` job handles this autonomously on every tag push.
+2. **Elimination of Local Tool Execution Confusion**:
+   - Previously, developers wondered if local commands like `rdctl extension install` or `docker pull` needed to be run locally.
+   - The newly committed `smoke-test-and-stage` job handles image pulling, startup checks, and version verification inside GitHub Actions cloud runners.
+3. **Structured Human-In-The-Loop (HIL) Guardrails**:
+   - Releases are now staged as drafts automatically with generated changelogs.
+   - Promotion to public release and directory re-indexing only triggers once the maintainer approves via the GitHub `release-approval` environment gate.
 
 ---
 
