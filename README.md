@@ -7,6 +7,7 @@
 [![Extension Release](https://img.shields.io/badge/Extension-v1.1.0-blue.svg)](https://github.com/SankarGaneshb/rover-slim/releases/tag/v1.1.0)
 [![Install in Rancher Desktop](https://img.shields.io/badge/Rancher%20Desktop-Install%20Extension-0075A8?style=for-the-badge&logo=suse&logoColor=white)](https://github.com/rancher-sandbox/rancher-desktop/pull/11115)
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://python.org)
+[![M8ven Trust](https://m8ven.ai/badge/mcp/sankarganeshb/rover-slim?variant=verified)](https://m8ven.ai/mcp/sankarganeshb/rover-slim?s=readme)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Rover-Slim** is an intelligent, source-first container optimization engine and official **Docker & Rancher Desktop Extension** that analyzes application Abstract Syntax Trees (AST), automatically segregates development bloat from minimal production dependencies, synthesizes hardened multi-stage Dockerfiles, and guarantees zero runtime breakage via **Green-on-Arrival (GoA)** Sentinel health checks.
@@ -139,6 +140,18 @@ Rover-Slim includes a native Model Context Protocol (MCP) server for integration
   }
 }
 ```
+
+### 🛡️ Exposed Tools & Safety Annotations
+Rover-Slim adheres to the official MCP specification risk vocabulary and OpenAI MCP directory standards. Every exposed tool declares explicit boolean hints (`readOnlyHint`, `destructiveHint`, `idempotentHint`, and `openWorldHint`):
+
+| Tool | Description | `readOnlyHint` | `destructiveHint` | `idempotentHint` | `openWorldHint` |
+|---|---|:---:|:---:|:---:|:---:|
+| `audit_container` | Audits directory or image for bloat, wasted layers, context leaks, and CVEs | `true` | `false` | `true` | `false` |
+| `get_markdown_report` | Generates GitHub PR markdown diff summary report | `true` | `false` | `true` | `false` |
+| `verify_goa` | Runs Green-on-Arrival Sentinel runtime boot integrity & health probes | `true` | `false` | `true` | `false` |
+| `optimize_project` | Runs end-to-end container optimization & writes multi-stage Dockerfile | `false` | `true` | `true` | `false` |
+
+> 🛡️ **Autonomous Safety**: Read-only inspection tools execute frictionlessly in agentic IDEs without confirmation prompts, while `optimize_project` signals `destructiveHint: true` so hosts warn users before modifying files.
 
 ---
 
