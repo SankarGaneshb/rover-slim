@@ -4,7 +4,7 @@
 [![GitHub Action](https://img.shields.io/badge/GitHub%20Action-v1-2088FF?style=flat&logo=githubactions&logoColor=white)](https://github.com/SankarGaneshb/rover-slim/releases/tag/v1.1.1)
 [![CI Test Suite](https://github.com/SankarGaneshb/rover-slim/actions/workflows/ci.yml/badge.svg)](https://github.com/SankarGaneshb/rover-slim/actions)
 [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](https://github.com/SankarGaneshb/rover-slim)
-[![Extension Release](https://img.shields.io/badge/Extension-v1.1.0-blue.svg)](https://github.com/SankarGaneshb/rover-slim/releases/tag/v1.1.0)
+[![Extension Release](https://img.shields.io/badge/Extension-v1.1.2-blue.svg)](https://github.com/SankarGaneshb/rover-slim/releases/tag/v1.1.2)
 [![Install in Rancher Desktop](https://img.shields.io/badge/Rancher%20Desktop-Install%20Extension-0075A8?style=for-the-badge&logo=suse&logoColor=white)](https://github.com/rancher-sandbox/rancher-desktop/pull/11115)
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://python.org)
 [![M8ven Trust](https://m8ven.ai/badge/mcp/sankarganeshb/rover-slim?variant=verified)](https://m8ven.ai/mcp/sankarganeshb/rover-slim?s=readme)
