@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MessageSquare, Heart, Sparkles, Send, Github, CheckCircle2, X } from 'lucide-react';
 import { unlockBadge } from '../utils/gamification';
+import { apiCall } from '../utils/api';
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -52,16 +53,12 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      await fetch("http://localhost:8000/api/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rating_emoji: selectedEmoji,
-          selected_chips: selectedChips,
-          comment,
-          feature_context: context,
-          project_name: projectName
-        })
+      await apiCall("/api/feedback", "POST", {
+        rating_emoji: selectedEmoji,
+        selected_chips: selectedChips,
+        comment,
+        feature_context: context,
+        project_name: projectName
       });
     } catch {
       // Local fallback

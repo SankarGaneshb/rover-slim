@@ -38,11 +38,12 @@ import { ThemeSelector } from './components/ThemeSelector';
 import { triggerConfetti } from './utils/confetti';
 import { unlockBadge, loadGamificationState } from './utils/gamification';
 import { ThemeMode, loadSavedTheme, saveTheme, applyTheme } from './utils/theme';
+import { apiCall, setApiClientDesktopClient } from './utils/api';
 
-const API_BASE_URL = 'http://localhost:8000';
 let ddClient: any = null;
 try {
   ddClient = createDockerDesktopClient();
+  setApiClientDesktopClient(ddClient);
 } catch (e) {
   console.warn('Running outside Desktop client environment:', e);
 }
@@ -298,30 +299,7 @@ CMD ["python", "server.py"]
     setUserScore(gamification.score);
   }, []);
 
-  // Call VM Service or fallback to REST API
-  const apiCall = async (endpoint: string, method = 'GET', body: any = null) => {
-    if (ddClient?.extension?.vm?.service) {
-      try {
-        if (method === 'GET') {
-          return await ddClient.extension.vm.service.get(endpoint);
-        } else {
-          return await ddClient.extension.vm.service.post(endpoint, body);
-        }
-      } catch (err) {
-        console.warn('VM service call failed, falling back to fetch:', err);
-      }
-    }
 
-    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: body ? JSON.stringify(body) : undefined,
-    });
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-    }
-    return await res.json();
-  };
 
   // Load images on mount
   const fetchImages = async () => {

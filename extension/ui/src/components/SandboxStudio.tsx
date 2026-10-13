@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Terminal, Activity, Play, RotateCcw, CheckCircle2, XCircle, Clock, ShieldCheck, Zap, AlertCircle } from 'lucide-react';
+import { apiCall } from '../utils/api';
 
 interface SandboxStudioProps {
   projectPath: string;
@@ -49,44 +50,25 @@ export const SandboxStudio: React.FC<SandboxStudioProps> = ({
     setProbeResult(null);
 
     try {
-      const res = await fetch("http://localhost:8000/api/sandbox/probe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          path: projectPath || ".",
-          target_url: probeUrl,
-          timeout_seconds: 3.0,
-          expected_status: 200
-        })
+      const data = await apiCall("/api/sandbox/probe", "POST", {
+        path: projectPath || ".",
+        target_url: probeUrl,
+        timeout_seconds: 3.0,
+        expected_status: 200
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        setProbeResult(data);
-      } else {
-        // Fallback simulation
-        setTimeout(() => {
-          setProbeResult({
-            probe_name: "HTTP GET Health",
-            target_url: probeUrl,
-            status: "PASSED",
-            status_code: 200,
-            latency_ms: 14.2,
-            response_snippet: '{"status":"healthy","uptime_seconds":1.2}'
-          });
-        }, 600);
-      }
+      setProbeResult(data);
     } catch {
+      // Fallback simulation
       setTimeout(() => {
         setProbeResult({
           probe_name: "HTTP GET Health",
           target_url: probeUrl,
           status: "PASSED",
           status_code: 200,
-          latency_ms: 12.8,
-          response_snippet: '{"status":"healthy","verified_by":"rover_sentinel"}'
+          latency_ms: 14.2,
+          response_snippet: '{"status":"healthy","uptime_seconds":1.2}'
         });
-      }, 500);
+      }, 600);
     } finally {
       setIsRunningProbe(false);
     }

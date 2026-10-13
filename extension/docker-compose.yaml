@@ -5,4 +5,4 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
-      - "40040:8000"
+      - "${ROVER_SLIM_PORT:-40040}:8000"
