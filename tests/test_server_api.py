@@ -105,3 +105,30 @@ def test_audit_invalid_path(client):
     test_client, _ = client
     res = test_client.post("/api/audit", json={"path": "non_existent_path_xyz"})
     assert res.status_code == 404
+
+def test_sandbox_probe_ssrf_blocked_metadata(client):
+    test_client, _ = client
+    # AWS/GCP cloud metadata IP
+    res = test_client.post("/api/sandbox/probe", json={
+        "path": ".",
+        "target_url": "http://169.254.169.254/latest/meta-data/"
+    })
+    assert res.status_code == 403
+    assert "metadata" in res.json()["detail"].lower()
+
+def test_sandbox_probe_ssrf_blocked_external_domain(client):
+    test_client, _ = client
+    res = test_client.post("/api/sandbox/probe", json={
+        "path": ".",
+        "target_url": "http://example.com/sensitive"
+    })
+    assert res.status_code == 403
+
+def test_sandbox_probe_ssrf_invalid_scheme(client):
+    test_client, _ = client
+    res = test_client.post("/api/sandbox/probe", json={
+        "path": ".",
+        "target_url": "file:///etc/passwd"
+    })
+    assert res.status_code == 400
+

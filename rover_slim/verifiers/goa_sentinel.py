@@ -85,51 +85,92 @@ class GoASentinelVerifier:
                 return {
                     "check": "Startup Integrity (Local Sandbox)",
                     "command": f'python -c "{py_snippet}"',
-                    "status": "PASSED",
-                    "output": f"Simulated verification: {e}"
+                    "status": "FAILED",
+                    "output": f"Startup verification failed: {e}"
                 }
 
     def verify_probes(self, image_tag: Optional[str] = None) -> List[Dict[str, Any]]:
         """Executes all configured probes (HTTP, TCP, script) against the candidate runtime."""
         probe_results = []
-        probes = self.config.verification.probes
-        if not probes and self.config.verification.auto_discover:
-            probes = [
-                ProbeConfig(
-                    name="Auto-Discovered Health Endpoint",
-                    type="http",
-                    path="/health",
-                    port=8080,
-                    expected_status=200,
-                    timeout_seconds=5
-                )
-            ]
+        probes = self.config.verification.probes or []
 
         for p in probes:
+            start_t = time.perf_counter()
             if p.type == "http":
-                probe_results.append({
-                    "probe": p.name,
-                    "type": "HTTP GET",
-                    "target": f"http://localhost:{p.port}{p.path}",
-                    "expected_status": p.expected_status,
-                    "status": "PASSED",
-                    "latency_ms": 14.2
-                })
+                target_url = f"http://127.0.0.1:{p.port}{p.path}"
+                try:
+                    resp = requests.get(target_url, timeout=p.timeout_seconds or 5)
+                    lat = round((time.perf_counter() - start_t) * 1000.0, 2)
+                    is_ok = (resp.status_code == p.expected_status)
+                    probe_results.append({
+                        "probe": p.name,
+                        "type": "HTTP GET",
+                        "target": target_url,
+                        "expected_status": p.expected_status,
+                        "status_code": resp.status_code,
+                        "status": "PASSED" if is_ok else "FAILED",
+                        "latency_ms": lat
+                    })
+                except Exception as e:
+                    lat = round((time.perf_counter() - start_t) * 1000.0, 2)
+                    probe_results.append({
+                        "probe": p.name,
+                        "type": "HTTP GET",
+                        "target": target_url,
+                        "expected_status": p.expected_status,
+                        "status": "FAILED",
+                        "latency_ms": lat,
+                        "error": str(e)
+                    })
             elif p.type == "tcp":
-                probe_results.append({
-                    "probe": p.name,
-                    "type": "TCP Connect",
-                    "port": p.port,
-                    "status": "PASSED",
-                    "latency_ms": 3.1
-                })
+                try:
+                    sock = socket.create_connection(("127.0.0.1", p.port), timeout=p.timeout_seconds or 5)
+                    sock.close()
+                    lat = round((time.perf_counter() - start_t) * 1000.0, 2)
+                    probe_results.append({
+                        "probe": p.name,
+                        "type": "TCP Connect",
+                        "port": p.port,
+                        "status": "PASSED",
+                        "latency_ms": lat
+                    })
+                except Exception as e:
+                    lat = round((time.perf_counter() - start_t) * 1000.0, 2)
+                    probe_results.append({
+                        "probe": p.name,
+                        "type": "TCP Connect",
+                        "port": p.port,
+                        "status": "FAILED",
+                        "latency_ms": lat,
+                        "error": str(e)
+                    })
             elif p.type == "script":
-                probe_results.append({
-                    "probe": p.name,
-                    "type": "Custom Script",
-                    "command": p.command,
-                    "status": "PASSED"
-                })
+                try:
+                    res = subprocess.run(
+                        p.command,
+                        shell=True,
+                        capture_output=True,
+                        text=True,
+                        timeout=p.timeout_seconds or 15,
+                        cwd=self.root_dir
+                    )
+                    passed = (res.returncode == 0)
+                    probe_results.append({
+                        "probe": p.name,
+                        "type": "Custom Script",
+                        "command": p.command,
+                        "status": "PASSED" if passed else "FAILED",
+                        "exit_code": res.returncode,
+                        "output": res.stdout.strip() or res.stderr.strip()
+                    })
+                except Exception as e:
+                    probe_results.append({
+                        "probe": p.name,
+                        "type": "Custom Script",
+                        "command": p.command,
+                        "status": "FAILED",
+                        "error": str(e)
+                    })
 
         return probe_results
 

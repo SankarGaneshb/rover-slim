@@ -1,16 +1,17 @@
 # 🚀 Rover-Slim: Autonomous Container Optimization Engine & Desktop Extension
 
+[![GitHub Marketplace](https://img.shields.io/badge/GitHub%20Marketplace-Rover--Slim%20Action-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/marketplace/actions/rover-slim-container-optimization-governance)
+[![M8ven Trust](https://m8ven.ai/badge/mcp/sankarganeshb/rover-slim?variant=verified)](https://m8ven.ai/mcp/sankarganeshb/rover-slim?s=readme)
 [![Docker Desktop Extension](https://img.shields.io/badge/Docker%20Desktop-Extension%20(CLI)-2496ED?style=flat&logo=docker&logoColor=white)](#1-install-in-docker-desktop)
+[![Rancher Desktop Extension](https://img.shields.io/badge/Rancher%20Desktop-Extension%20(CLI)-0075A8?style=flat&logo=suse&logoColor=white)](#2-install-in-rancher-desktop)
 [![Docker Hub](https://img.shields.io/badge/Docker%20Hub-bsankarganesh%2Frover--slim--extension-blue?style=flat&logo=docker&logoColor=white)](https://hub.docker.com/r/bsankarganesh/rover-slim-extension)
-[![GitHub Action](https://img.shields.io/badge/GitHub%20Action-v1-2088FF?style=flat&logo=githubactions&logoColor=white)](https://github.com/SankarGaneshb/rover-slim/releases/tag/v1.1.1)
 [![CI Test Suite](https://github.com/SankarGaneshb/rover-slim/actions/workflows/ci.yml/badge.svg)](https://github.com/SankarGaneshb/rover-slim/actions)
 [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](https://github.com/SankarGaneshb/rover-slim)
 [![Extension Release](https://img.shields.io/badge/Extension-v1.1.2-blue.svg)](https://github.com/SankarGaneshb/rover-slim/releases/tag/v1.1.2)
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://python.org)
-[![M8ven Trust](https://m8ven.ai/badge/mcp/sankarganeshb/rover-slim?variant=verified)](https://m8ven.ai/mcp/sankarganeshb/rover-slim?s=readme)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Rover-Slim** is an intelligent, source-first container optimization engine and community **Container Desktop Extension** (compatible with Docker Desktop & Rancher Desktop) that analyzes application Abstract Syntax Trees (AST), automatically segregates development bloat from minimal production dependencies, synthesizes hardened multi-stage Dockerfiles, and guarantees zero runtime breakage via **Green-on-Arrival (GoA)** Sentinel health checks.
+**Rover-Slim** is an intelligent, source-first container optimization engine, official **[GitHub Marketplace Action](https://github.com/marketplace/actions/rover-slim-container-optimization-governance)**, and community **Container Desktop Extension** (compatible with Docker Desktop & Rancher Desktop) that analyzes application Abstract Syntax Trees (AST), automatically segregates development bloat from minimal production dependencies, synthesizes hardened multi-stage Dockerfiles, and guarantees zero runtime breakage via **Green-on-Arrival (GoA)** Sentinel health checks.
 
 ---
 
@@ -22,6 +23,7 @@
 
 ## 🎯 Key Capabilities
 
+- **🚀 Official GitHub Action**: Published on [GitHub Marketplace](https://github.com/marketplace/actions/rover-slim-container-optimization-governance) to automate container optimization and layer bloat governance directly in CI/CD with automated PR diff comments.
 - **🧬 AST-Driven Dependency Segregation**: Parses Python source syntax trees to detect genuine runtime `import` statements, generating lean `requirements-prod.txt` while quarantining dev tools (`pytest`, `black`, `ruff`, `locust`).
 - **🏗️ Deterministic Multi-Stage Synthesis**: Synthesizes 2-stage and 3-stage minimal multi-arch Dockerfiles running under unprivileged non-root users (`appuser`, UID `10001`).
 - **🛡️ Context Shielding (`.dockerignore`)**: Automatically detects and shields build contexts from heavy test caches, `.git`, `node_modules`, and local state.
@@ -49,7 +51,7 @@
 Rover-Slim provides an interactive visual GUI extension compatible with both **Docker Desktop** and **Rancher Desktop**.
 
 > [!NOTE]
-> **Community Extension**: Rover-Slim is a standalone, community-maintained extension (not yet published to the official Docker Desktop Extensions Marketplace or Rancher Desktop Extension Catalog). You can install and use it directly via the standard CLI commands below using the published OCI image on Docker Hub (`bsankarganesh/rover-slim-extension:latest`).
+> **Community Extension**: Rover-Slim is an independent, community-developed extension. It is **not** an official extension, and is not affiliated with, sponsored by, or endorsed by SUSE / Rancher Desktop or Docker, Inc., nor is it listed in the official Docker Desktop Extensions Marketplace or Rancher Desktop Extension Catalog. You can install and use it directly via the standard CLI commands below using the published OCI image on Docker Hub (`bsankarganesh/rover-slim-extension:latest`).
 
 ### 1. Install in Docker Desktop
 Install directly via the Docker CLI:
@@ -91,6 +93,61 @@ Open **Docker Desktop** or **Rancher Desktop** and click **Rover Slim** in the l
 - **Diff Inspector**: Inspect generated multi-stage Dockerfiles side-by-side.
 - **GoA Sentinel**: Run live HTTP health probes and ephemeral container sandboxes.
 - **Export Hub**: Generate GitHub PR descriptions, CI/CD YAML workflows, and SBOMs.
+
+---
+
+## 🚀 GitHub Action (Official Marketplace)
+
+[![GitHub Marketplace](https://img.shields.io/badge/GitHub%20Marketplace-Rover--Slim%20Action-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/marketplace/actions/rover-slim-container-optimization-governance)
+
+Rover-Slim is officially published on the [GitHub Marketplace](https://github.com/marketplace/actions/rover-slim-container-optimization-governance). Integrate autonomous container optimization directly into your CI/CD pipeline to shrink containers, eliminate layer waste, and enforce container size governance on every Pull Request.
+
+### Example Workflow (`.github/workflows/rover-slim.yml`)
+
+```yaml
+name: "Rover-Slim Optimization & Governance"
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Rover-Slim Container Optimization
+        uses: SankarGaneshb/rover-slim@v1
+        with:
+          project_path: "."
+          max_image_size_mb: "350"
+          max_wasted_percent: "10"
+          verify_goa: "true"
+          auto_commit: "false"
+```
+
+### Action Inputs & Outputs
+
+| Input | Description | Default |
+|---|---|---|
+| `project_path` | Path to project root | `.` |
+| `max_image_size_mb` | Maximum allowable uncompressed image size in MB | `350` |
+| `max_wasted_percent` | Maximum allowable layer waste percentage | `10` |
+| `verify_goa` | Run Green-on-Arrival sentinel verification probes | `true` |
+| `auto_commit` | Automatically commit and push segregated requirements and multi-stage Dockerfile | `false` |
+| `github_token` | GitHub token for posting PR summary comments | `${{ github.token }}` |
+
+| Output | Description |
+|---|---|
+| `size_reduction_pct` | Percentage container size reduction achieved |
+| `optimized_size_mb` | Final optimized image size in MB |
+| `report_json` | Structured JSON metrics summary |
 
 ---
 

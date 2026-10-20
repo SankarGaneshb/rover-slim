@@ -176,8 +176,9 @@ jobs:
           
           ### 📢 Community Launch Text (Ready to Share):
           > **Rover-Slim ${{ github.ref_name }} is live!** Shrink Docker containers by ~80% with AST dependency pruning & GoA sentinel health checks.
-          > 1-click install in Docker Desktop & Rancher Desktop:
-          > \`rdctl extension install bsankarganesh/rover-slim-extension:latest\`
+          > Install via CLI in Docker Desktop & Rancher Desktop:
+          > `docker extension install bsankarganesh/rover-slim-extension:latest`
+          > `rdctl extension install bsankarganesh/rover-slim-extension:latest`
           > GitHub: https://github.com/SankarGaneshb/rover-slim
           EOF
 

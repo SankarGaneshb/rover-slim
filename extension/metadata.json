@@ -8,6 +8,9 @@
     }
   },
   "vm": {
-    "composefile": "docker-compose.yaml"
+    "composefile": "docker-compose.yaml",
+    "exposes": {
+      "socket": "rover-slim.sock"
+    }
   }
 }

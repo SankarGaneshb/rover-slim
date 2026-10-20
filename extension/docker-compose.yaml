@@ -4,5 +4,6 @@ services:
     image: "${DESKTOP_PLUGIN_IMAGE}"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /run/guest-services:/run/guest-services
     ports:
-      - "${ROVER_SLIM_PORT:-40040}:8000"
+      - "127.0.0.1:${ROVER_SLIM_PORT:-40040}:8000"

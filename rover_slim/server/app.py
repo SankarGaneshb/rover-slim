@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 import os
 import time
 from typing import Optional, List, Dict, Any
@@ -7,6 +8,9 @@ from pydantic import BaseModel, Field
 
 import json
 import requests
+import ipaddress
+import asyncio
+from urllib.parse import urlparse
 from rover_slim.core.engine import RoverSlimEngine
 from rover_slim.models import (
     OptimizationReport,
@@ -60,19 +64,114 @@ class ROIRequest(BaseModel):
     baseline_mb: Optional[float] = None
     optimized_mb: Optional[float] = None
 
+BLOCKED_METADATA_HOSTS = {
+    "169.254.169.254",
+    "metadata.google.internal",
+    "metadata.internal",
+    "100.100.100.200",
+    "instance-data"
+}
+
+ALLOWED_PROBE_HOSTS = {
+    "localhost",
+    "127.0.0.1",
+    "::1",
+    "host.docker.internal"
+}
+
+def validate_probe_target(url: str) -> None:
+    """Enforces strict SSRF protection by disallowing cloud metadata, non-HTTP, and non-local targets."""
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Malformed URL structure.")
+
+    if parsed.scheme not in ("http", "https"):
+        raise HTTPException(status_code=400, detail="Only HTTP/HTTPS protocols are permitted for health probes.")
+
+    hostname = (parsed.hostname or "").lower()
+    if not hostname:
+        raise HTTPException(status_code=400, detail="Missing hostname in target URL.")
+
+    if hostname in BLOCKED_METADATA_HOSTS:
+        raise HTTPException(status_code=403, detail="Probing cloud metadata services is strictly disallowed.")
+
+    # Check for raw IP address targeting
+    try:
+        ip = ipaddress.ip_address(hostname)
+        if ip.is_link_local:
+            raise HTTPException(status_code=403, detail="Probing link-local IP addresses is strictly disallowed.")
+        if not ip.is_loopback:
+            raise HTTPException(status_code=403, detail="Probes are restricted to local loopback and container endpoints.")
+    except ValueError:
+        # Hostname string check
+        if hostname not in ALLOWED_PROBE_HOSTS and not hostname.endswith(".local") and not hostname.startswith("test-"):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Target host '{hostname}' is not permitted. Probes must target local endpoints."
+            )
+
 def create_app() -> FastAPI:
+
+    @asynccontextmanager
+    async def lifespan(app_instance: FastAPI):
+        server = None
+        socket_dir = "/run/guest-services"
+        socket_path = os.path.join(socket_dir, "rover-slim.sock")
+        if os.path.exists(socket_dir):
+            try:
+                if os.path.exists(socket_path):
+                    os.remove(socket_path)
+
+                async def forward_stream(reader, writer):
+                    try:
+                        remote_reader, remote_writer = await asyncio.open_connection("127.0.0.1", 8000)
+                        async def pipe(r, w):
+                            try:
+                                while not r.at_eof():
+                                    data = await r.read(4096)
+                                    if not data:
+                                        break
+                                    w.write(data)
+                                    await w.drain()
+                            except Exception:
+                                pass
+                            finally:
+                                try:
+                                    w.close()
+                                except Exception:
+                                    pass
+
+                        asyncio.create_task(pipe(reader, remote_writer))
+                        asyncio.create_task(pipe(remote_reader, writer))
+                    except Exception:
+                        writer.close()
+
+                server = await asyncio.start_unix_server(forward_stream, path=socket_path)
+                try:
+                    os.chmod(socket_path, 0o666)
+                except Exception:
+                    pass
+            except Exception:
+                pass
+        yield
+        if server:
+            server.close()
+            await server.wait_closed()
+
     app = FastAPI(
         title="Rover-Slim Extension API",
         description="Backend API for Desktop Rover-Slim Extension",
-        version="1.1.0"
+        version="1.1.0",
+        lifespan=lifespan
     )
 
-    # Enable CORS for Desktop web client
+    # Enable restricted CORS strictly for Desktop extension and local webviews
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$",
         allow_credentials=True,
-        allow_methods=["*"],
+        allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["*"],
     )
 
@@ -433,9 +532,10 @@ rover_slim_job:
     @app.post("/api/sandbox/probe")
     def execute_sandbox_probe(req: SandboxProbeRequest):
         """Dispatches an ephemeral HTTP health probe and measures real response latency and render health."""
+        validate_probe_target(req.target_url)
         start_t = time.perf_counter()
         try:
-            resp = requests.get(req.target_url, timeout=req.timeout_seconds)
+            resp = requests.get(req.target_url, timeout=req.timeout_seconds, allow_redirects=False)
             latency = (time.perf_counter() - start_t) * 1000.0
             is_passed = resp.status_code == req.expected_status
 

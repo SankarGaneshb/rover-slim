@@ -34,11 +34,21 @@ RUN pip install --no-cache-dir --user --no-deps -e .
 FROM python:3.13-slim AS runtime
 WORKDIR /backend
 
-# Clean runtime environment with zero build tools or package manager caches
+# Clean runtime environment with curl, ca-certificates, and static Docker CLI binary
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
- && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+ && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+ && ARCH=$(uname -m) && \
+    case "$ARCH" in \
+      x86_64) DOCKER_ARCH="x86_64" ;; \
+      aarch64) DOCKER_ARCH="aarch64" ;; \
+      *) DOCKER_ARCH="x86_64" ;; \
+    esac && \
+    curl -fsSL "https://download.docker.com/linux/static/stable/${DOCKER_ARCH}/docker-27.3.1.tgz" | tar -xz -C /tmp && \
+    mv /tmp/docker/docker /usr/local/bin/docker && \
+    chmod +x /usr/local/bin/docker && \
+    rm -rf /tmp/docker
 
 # Copy pre-compiled Python packages from python-builder stage
 COPY --from=python-builder /root/.local /root/.local
