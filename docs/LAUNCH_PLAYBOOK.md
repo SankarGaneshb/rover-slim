@@ -66,7 +66,7 @@ I built **Rover-Slim**, an open-source Docker Desktop extension that automates t
 - **Green-on-Arrival Sentinel:** Runs ephemeral container health checks (`/health`) before applying changes so you never push a broken container.
 - **Supply Chain Hub:** 1-click generation of SPDX 2.3 & CycloneDX 1.5 SBOMs.
 
-It's now officially published on the Docker Extensions Marketplace:
+Published on the Docker Extensions Marketplace:
 👉 [Install in Docker Desktop](https://open.docker.com/extensions/marketplace?extensionId=bsankarganesh/rover-slim-extension&tag=latest)  
 👉 GitHub: [https://github.com/SankarGaneshb/rover-slim](https://github.com/SankarGaneshb/rover-slim)
 
@@ -142,7 +142,7 @@ I built and launched Rover-Slim — an open-source Docker Desktop Extension that
 
 Benchmark: 1,232 MB ➔ 214 MB (-82% image size, -84% compressed registry transfer)
 
-Now live on the official Docker Extensions Marketplace:
+Live on the Docker Extensions Marketplace:
 https://open.docker.com/extensions/marketplace?extensionId=bsankarganesh/rover-slim-extension&tag=latest
 
 GitHub: https://github.com/SankarGaneshb/rover-slim

@@ -57,18 +57,15 @@ export const SandboxStudio: React.FC<SandboxStudioProps> = ({
         expected_status: 200
       });
       setProbeResult(data);
-    } catch {
-      // Fallback simulation
-      setTimeout(() => {
-        setProbeResult({
-          probe_name: "HTTP GET Health",
-          target_url: probeUrl,
-          status: "PASSED",
-          status_code: 200,
-          latency_ms: 14.2,
-          response_snippet: '{"status":"healthy","uptime_seconds":1.2}'
-        });
-      }, 600);
+    } catch (err: any) {
+      setProbeResult({
+        probe_name: "HTTP GET Health",
+        target_url: probeUrl,
+        status: "FAILED",
+        status_code: 0,
+        latency_ms: 0,
+        response_snippet: `Probe connection failed: ${err?.message || 'Endpoint unreachable'}`
+      });
     } finally {
       setIsRunningProbe(false);
     }

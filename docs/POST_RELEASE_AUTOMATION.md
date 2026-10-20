@@ -203,7 +203,7 @@ Here is the exact workflow configuration to add to `.github/workflows/release-ex
           cat << 'EOF' >> $GITHUB_STEP_SUMMARY
           ## 📢 Post-Release Community Launch Cards Ready
 
-          The release is officially verified on Docker Hub. Copy-paste launch snippets for community distribution:
+          The release is verified on Docker Hub. Copy-paste launch snippets for community distribution:
 
           ### 🐦 X / LinkedIn
           > Rover-Slim ${{ github.ref_name }} is live! Shrink Docker containers by 80% with AST dependency pruning & GoA sentinel health checks.

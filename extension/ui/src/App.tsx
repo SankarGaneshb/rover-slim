@@ -96,151 +96,15 @@ export const App: React.FC = () => {
   const [userScore, setUserScore] = useState<number>(85);
 
   // Core Optimization Report State
-  const [report, setReport] = useState<any>({
-    project: 'my-service:latest',
-    timestamp: new Date().toISOString(),
-    status: 'PASSED',
-    baseline: {
-      uncompressed_size_mb: 945.0,
-      compressed_size_mb: 312.0,
-      build_context_mb: 85.4,
-      layer_count: 18,
-      wasted_space_mb: 142.0,
-      wasted_percent: 15.0,
-      total_packages: 24,
-    },
-    optimized: {
-      uncompressed_size_mb: 142.5,
-      compressed_size_mb: 48.0,
-      build_context_mb: 1.2,
-      layer_count: 7,
-      wasted_space_mb: 0.0,
-      wasted_percent: 0.0,
-      total_packages: 8,
-    },
-    pruned_dependencies: [
-      { package: 'pytest==7.4.0', action: 'MOVED_TO_DEV', reason: 'Classified as dev/test tooling dependency', estimated_size_mb: 22.0 },
-      { package: 'pytest-asyncio==0.21.0', action: 'MOVED_TO_DEV', reason: 'Classified as dev/test tooling dependency', estimated_size_mb: 8.5 },
-      { package: 'black==23.7.0', action: 'MOVED_TO_DEV', reason: 'Classified as formatting/linting dependency', estimated_size_mb: 18.0 },
-      { package: 'ruff==0.0.280', action: 'MOVED_TO_DEV', reason: 'Classified as linter dependency', estimated_size_mb: 15.0 },
-      { package: 'ipykernel==6.25.0', action: 'MOVED_TO_DEV', reason: 'Zero AST import references found in production source', estimated_size_mb: 34.0 },
-      { package: 'matplotlib==3.7.2', action: 'MOVED_TO_DEV', reason: 'Zero AST import references found in production source', estimated_size_mb: 45.0 },
-    ],
-    goa_verification: {
-      overall_status: 'GREEN (PASSED)',
-      startup_integrity: {
-        command: "python -c 'import server'",
-        status: 'PASSED',
-        exit_code: 0,
-      },
-      probes: [
-        { probe: 'HTTP Root Health (/health)', type: 'http', status: 'HEALTHY', latency_ms: 14.8, expected_status: 200 }
-      ],
-      static_assets: {
-        status: 'PASSED',
-        checked_paths: ['static/']
-      }
-    }
-  });
+  const [report, setReport] = useState<any>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Bloat & Security Diagnostic State
-  const [bloatReport, setBloatReport] = useState<BloatDiagnosticReport | null>({
-    project_path: '.',
-    total_bloat_mb: 685.0,
-    potential_reduction_pct: 72.5,
-    findings: [
-      {
-        id: "compiler-toolchain-leak",
-        category: "COMPILER_TOOLCHAIN",
-        title: "Build-time Compilers Retained in Production Image",
-        severity: "HIGH",
-        wasted_mb: 420.0,
-        explanation: "Compilers like 'gcc', 'g++', and development header packages are installed in runtime stage, bloating the container by ~420 MB.",
-        remediation: "Rover-Slim synthesizes a 2-stage multi-stage build, moving compiler packages to an ephemeral build stage."
-      },
-      {
-        id: "dev-dependency-bloat",
-        category: "DEV_DEPENDENCIES",
-        title: "Development & Test Packages Bundled in Production",
-        severity: "HIGH",
-        wasted_mb: 170.0,
-        explanation: "Tools like pytest, black, and ruff are bundled into production requirements.",
-        remediation: "Rover-Slim segregates runtime packages into 'requirements-prod.txt' while quarantining dev tools."
-      },
-      {
-        id: "context-cache-leakage",
-        category: "CONTEXT_LEAKAGE",
-        title: "Build Context Leakage (.git & caches)",
-        severity: "MEDIUM",
-        wasted_mb: 95.0,
-        explanation: "Local cache directories (.git, .pytest_cache) are sent to the build context.",
-        remediation: "Rover-Slim generates an aggressive '.dockerignore' shield."
-      },
-      {
-        id: "root-privilege-risk",
-        category: "ROOT_SECURITY",
-        title: "Container Runs as Root (UID 0)",
-        severity: "CRITICAL",
-        wasted_mb: 0.0,
-        explanation: "Running as root violates CIS Docker Benchmark (Rule 4.1).",
-        remediation: "Rover-Slim creates and switches to an unprivileged system user ('appuser', UID 10001)."
-      }
-    ],
-    has_single_stage: true,
-    has_root_user: true,
-    missing_dockerignore: true
-  });
+  const [bloatReport, setBloatReport] = useState<BloatDiagnosticReport | null>(null);
+  const [securityScorecard, setSecurityScorecard] = useState<SecurityScorecardReport | null>(null);
 
-  const [securityScorecard, setSecurityScorecard] = useState<SecurityScorecardReport | null>({
-    hardening_score: 95,
-    grade: "A+",
-    is_non_root: true,
-    user_uid: 10001,
-    has_zero_compilers: true,
-    sbom_generated: true,
-    checks: [
-      {
-        id: "cis-4.1-non-root",
-        name: "Unprivileged User (Non-Root)",
-        status: "PASSED",
-        standard: "CIS Docker Benchmark 4.1",
-        description: "Container executes as unprivileged system user ('appuser', UID 10001).",
-        remediation: "Verified secure."
-      },
-      {
-        id: "cis-zero-compilers",
-        name: "Zero Compilers in Final Runtime",
-        status: "PASSED",
-        standard: "NIST SP 800-190",
-        description: "Compilers (gcc, g++) are isolated in builder stage and removed from runtime.",
-        remediation: "Verified secure."
-      },
-      {
-        id: "supply-chain-sbom",
-        name: "Software Bill of Materials (SBOM)",
-        status: "PASSED",
-        standard: "Executive Order 14028",
-        description: "Automated SPDX and CycloneDX inventory generated for all dependencies.",
-        remediation: "Verified secure."
-      }
-    ]
-  });
-
-  const [prodPackages, setProdPackages] = useState<string[]>([
-    'fastapi==0.100.0',
-    'uvicorn==0.22.0',
-    'pydantic==2.0.0',
-    'requests==2.31.0',
-    'pyyaml==6.0'
-  ]);
-  const [devPackages, setDevPackages] = useState<string[]>([
-    'pytest==7.4.0',
-    'pytest-asyncio==0.21.0',
-    'black==23.7.0',
-    'ruff==0.0.280',
-    'ipykernel==6.25.0',
-    'matplotlib==3.7.2'
-  ]);
+  const [prodPackages, setProdPackages] = useState<string[]>([]);
+  const [devPackages, setDevPackages] = useState<string[]>([]);
 
   const [diffData, setDiffData] = useState<{
     originalDockerfile: string;
@@ -248,50 +112,10 @@ export const App: React.FC = () => {
     unifiedDiff: string;
     improvements: Array<{ type: string; title: string; description: string }>;
   }>({
-    originalDockerfile: `FROM python:3.11\nWORKDIR /app\nCOPY . .\nRUN pip install -r requirements.txt\nCMD ["python", "server.py"]\n`,
-    optimizedDockerfile: `# Generated by Rover-Slim Multi-Stage Synthesizer
-FROM python:3.13-slim AS builder
-WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends gcc python3-dev && rm -rf /var/lib/apt/lists/*
-COPY requirements-prod.txt .
-RUN pip install --no-cache-dir --user -r requirements-prod.txt
-
-FROM python:3.13-slim AS runtime
-WORKDIR /app
-RUN groupadd -r appuser -g 10001 && useradd -r -g appuser -u 10001 appuser
-COPY --from=builder /root/.local /home/appuser/.local
-COPY . .
-ENV PATH=/home/appuser/.local/bin:$PATH
-USER 10001
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD curl -f http://localhost:8080/health || exit 1
-CMD ["python", "server.py"]
-`,
-    unifiedDiff: `--- Dockerfile.baseline
-+++ Dockerfile.optimized
-@@ -1,5 +1,15 @@
--FROM python:3.11
-+FROM python:3.13-slim AS builder
- WORKDIR /app
-+RUN apt-get update && apt-get install -y --no-install-recommends gcc python3-dev
-+COPY requirements-prod.txt .
-+RUN pip install --no-cache-dir --user -r requirements-prod.txt
-+
-+FROM python:3.13-slim AS runtime
-+WORKDIR /app
-+RUN groupadd -r appuser -g 10001 && useradd -r -g appuser -u 10001 appuser
-+COPY --from=builder /root/.local /home/appuser/.local
- COPY . .
--RUN pip install -r requirements.txt
-+ENV PATH=/home/appuser/.local/bin:$PATH
-+USER 10001
-+HEALTHCHECK --interval=30s --timeout=5s CMD curl -f http://localhost:8080/health || exit 1
- CMD ["python", "server.py"]`,
-    improvements: [
-      { type: 'SECURITY', title: 'Non-Root User Enforcement', description: "Added dedicated 'appuser' (UID 10001) to prevent container escape exploits." },
-      { type: 'OPTIMIZATION', title: 'Disabled Pip Wheel Cache', description: "Enforced '--no-cache-dir' on pip install, saving ~30-60 MB." },
-      { type: 'ARCHITECTURE', title: '2-Stage Multi-Stage Build', description: 'Segregated compilation toolchains (gcc/python3-dev) from final runtime image.' },
-      { type: 'RELIABILITY', title: 'GoA Healthcheck Sentinel', description: 'Added active Docker healthcheck probe to monitor runtime responsiveness.' }
-    ]
+    originalDockerfile: '',
+    optimizedDockerfile: '',
+    unifiedDiff: '',
+    improvements: []
   });
 
   useEffect(() => {
@@ -378,64 +202,13 @@ CMD ["python", "server.py"]
     setInOptimizationView(true);
     setActiveWorkspaceTab('metrics');
     setStatusMessage(`Analyzing ${imageTag ? `Docker image '${imageTag}'` : `project '${path}'`}...`);
-    
-    if (imageTag) {
-      const matchedImage = imagesList.find(img => img.tag === imageTag);
-      const realSizeMb = matchedImage ? matchedImage.size_mb : 55.0;
-      const isLean = realSizeMb <= 80 || imageTag.toLowerCase().includes('alpine') || imageTag.toLowerCase().includes('redis');
-
-      setReport({
-        project: imageTag,
-        timestamp: new Date().toISOString(),
-        status: 'PASSED',
-        baseline: {
-          uncompressed_size_mb: realSizeMb,
-          compressed_size_mb: Math.round(realSizeMb * 0.38 * 10) / 10,
-          build_context_mb: 2.0,
-          layer_count: isLean ? 6 : 24,
-          wasted_space_mb: isLean ? 0.0 : Math.round(realSizeMb * 0.125 * 10) / 10,
-          wasted_percent: isLean ? 0.0 : 12.5,
-          total_packages: isLean ? 8 : 42,
-        },
-        optimized: {
-          uncompressed_size_mb: isLean ? realSizeMb : 142.5,
-          compressed_size_mb: isLean ? Math.round(realSizeMb * 0.38 * 10) / 10 : 48.0,
-          build_context_mb: 1.2,
-          layer_count: isLean ? 6 : 7,
-          wasted_space_mb: 0.0,
-          wasted_percent: 0.0,
-          total_packages: isLean ? 8 : 8,
-        },
-        pruned_dependencies: isLean ? [] : [
-          { package: 'pytest==7.4.0', action: 'MOVED_TO_DEV', reason: 'Classified as dev/test tooling dependency', estimated_size_mb: 22.0 },
-          { package: 'black==23.7.0', action: 'MOVED_TO_DEV', reason: 'Classified as formatting/linting dependency', estimated_size_mb: 18.0 },
-          { package: 'ruff==0.0.280', action: 'MOVED_TO_DEV', reason: 'Classified as linter dependency', estimated_size_mb: 15.0 },
-        ],
-        goa_verification: {
-          overall_status: 'GREEN (PASSED)',
-          startup_integrity: {
-            command: isLean ? `docker inspect ${imageTag}` : "python -c 'import server'",
-            status: 'PASSED',
-            exit_code: 0,
-          },
-          probes: [
-            { probe: `${imageTag} Health Check`, type: 'docker', status: 'HEALTHY', latency_ms: 12.4, expected_status: 200 }
-          ],
-          static_assets: {
-            status: 'PASSED',
-            checked_paths: ['/']
-          }
-        }
-      });
-
-      if (isLean) {
-        setProdPackages([`${imageTag} (Alpine Minimal Image)`]);
-        setDevPackages([]);
-      } else {
-        setProdPackages(['fastapi==0.100.0', 'uvicorn==0.22.0', 'pydantic==2.0.0', 'requests==2.31.0']);
-        setDevPackages(['pytest==7.4.0', 'black==23.7.0', 'ruff==0.0.280']);
-      }
-    }
+    setErrorMessage(null);
+    setReport(null);
+    setBloatReport(null);
+    setSecurityScorecard(null);
+    setDiffData({ originalDockerfile: '', optimizedDockerfile: '', unifiedDiff: '', improvements: [] });
+    setProdPackages([]);
+    setDevPackages([]);
 
     try {
       const data = await apiCall('/api/audit', 'POST', {
@@ -444,24 +217,38 @@ CMD ["python", "server.py"]
       });
       if (data?.report) {
         setReport(data.report);
-      }
-      const diffJson = await apiCall('/api/diff', 'POST', { path: path || '.' });
-      if (diffJson) {
-        setDiffData({
-          originalDockerfile: diffJson.original_dockerfile,
-          optimizedDockerfile: diffJson.optimized_dockerfile,
-          unifiedDiff: diffJson.unified_diff,
-          improvements: diffJson.improvements,
-        });
+        if (data.report.pruned_dependencies && Array.isArray(data.report.pruned_dependencies)) {
+          const dev = data.report.pruned_dependencies.map((p: any) => p.package);
+          setDevPackages(dev);
+        }
+      } else {
+        throw new Error('Rover-Slim backend returned an invalid report.');
       }
 
-      // Fetch Bloat Explainer
+      // Fetch Diff
+      try {
+        const diffJson = await apiCall('/api/diff', 'POST', { path: path || '.' });
+        if (diffJson) {
+          setDiffData({
+            originalDockerfile: diffJson.original_dockerfile || '',
+            optimizedDockerfile: diffJson.optimized_dockerfile || '',
+            unifiedDiff: diffJson.unified_diff || '',
+            improvements: diffJson.improvements || [],
+          });
+        }
+      } catch (diffErr) {
+        console.warn('Diff inspection unavailable for target:', diffErr);
+      }
+
+      // Fetch Bloat Diagnoser
       try {
         const bloatJson = await apiCall('/api/bloat-diagnose', 'POST', { path: path || '.' });
         if (bloatJson?.report) {
           setBloatReport(bloatJson.report);
         }
-      } catch {}
+      } catch (bloatErr) {
+        console.warn('Bloat diagnosis unavailable for target:', bloatErr);
+      }
 
       // Fetch Security Scorecard
       try {
@@ -469,11 +256,15 @@ CMD ["python", "server.py"]
         if (secJson?.scorecard) {
           setSecurityScorecard(secJson.scorecard);
         }
-      } catch {}
+      } catch (secErr) {
+        console.warn('Security scorecard unavailable for target:', secErr);
+      }
 
       setStatusMessage(`Analysis complete for ${imageTag || path}!`);
     } catch (e: any) {
-      setStatusMessage(`Loaded analysis for ${imageTag || path}.`);
+      console.error('Audit failed:', e);
+      setErrorMessage(e?.message || 'Failed to communicate with Rover-Slim backend service.');
+      setStatusMessage(`Failed to analyze ${imageTag || path}.`);
     } finally {
       setIsLoading(false);
     }
@@ -487,6 +278,7 @@ CMD ["python", "server.py"]
   const handleOptimizeAction = async () => {
     setIsLoading(true);
     setStatusMessage('Running multi-stage synthesis & GoA Sentinel verification...');
+    setErrorMessage(null);
     try {
       const data = await apiCall('/api/optimize', 'POST', {
         path: projectPath,
@@ -506,10 +298,13 @@ CMD ["python", "server.py"]
         unlockBadge('eco-champion');
         const updatedState = loadGamificationState();
         setUserScore(updatedState.score);
+      } else {
+        throw new Error('Optimization completed without returning a valid report.');
       }
     } catch (e: any) {
-      setStatusMessage('Optimized in local workbench mode.');
-      triggerConfetti();
+      console.error('Optimization failed:', e);
+      setErrorMessage(`Optimization failed: ${e?.message || 'Backend service error'}`);
+      setStatusMessage('Optimization failed.');
     } finally {
       setIsLoading(false);
     }
@@ -532,6 +327,7 @@ CMD ["python", "server.py"]
   };
 
   const handleFetchExport = async (format: string): Promise<string> => {
+    if (!report) return format === 'json' ? '{}' : 'No optimization report available yet.';
     try {
       const data = await apiCall('/api/export', 'POST', {
         path: projectPath || '.',
@@ -840,9 +636,15 @@ jobs:
                     {selectedImage || projectPath}
                   </code>
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  Baseline: {report.baseline.uncompressed_size_mb.toFixed(1)} MB | Candidate: {report.optimized.uncompressed_size_mb.toFixed(1)} MB (-{((Math.max(0, report.baseline.uncompressed_size_mb - report.optimized.uncompressed_size_mb) / (report.baseline.uncompressed_size_mb || 1)) * 100).toFixed(1)}%)
-                </div>
+                {report && report.baseline && report.optimized ? (
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Baseline: {report.baseline.uncompressed_size_mb.toFixed(1)} MB | Candidate: {report.optimized.uncompressed_size_mb.toFixed(1)} MB (-{((Math.max(0, report.baseline.uncompressed_size_mb - report.optimized.uncompressed_size_mb) / (report.baseline.uncompressed_size_mb || 1)) * 100).toFixed(1)}%)
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    {isLoading ? 'Auditing container metrics...' : (errorMessage ? 'Audit unavailable' : 'Metrics pending audit')}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -859,7 +661,7 @@ jobs:
               <button
                 className="btn btn-primary"
                 onClick={handleOptimizeAction}
-                disabled={isLoading}
+                disabled={isLoading || !report}
               >
                 <Zap size={14} />
                 {isLoading ? 'Synthesizing...' : 'Run GoA Optimization'}
@@ -948,7 +750,46 @@ jobs:
 
           {/* Studio Tab Content */}
           <main style={{ marginTop: '1.25rem' }}>
-            {activeWorkspaceTab === 'metrics' && (
+            {isLoading && !report ? (
+              <div style={{ padding: '3.5rem 2rem', textAlign: 'center', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', margin: '1.5rem 0' }}>
+                <RefreshCw size={36} className="spin" style={{ color: '#0ea5e9', marginBottom: '1rem', display: 'inline-block' }} />
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-main)' }}>
+                  Auditing Container Architecture
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '480px', margin: '0 auto' }}>
+                  Rover-Slim is inspecting AST imports, Docker layer histories, and generating candidate multi-stage synthesis...
+                </p>
+              </div>
+            ) : errorMessage && !report ? (
+              <div style={{ padding: '2rem', background: 'rgba(239, 68, 68, 0.08)', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.3)', margin: '1.5rem 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#f87171', marginBottom: '0.75rem' }}>
+                  <AlertCircle size={24} />
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>Analysis Could Not Be Completed</h3>
+                </div>
+                <p style={{ color: 'var(--text-main)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                  {errorMessage}
+                </p>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+                  Ensure the Rover-Slim backend container is running and Docker daemon is accessible.
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setInOptimizationView(false)}
+                  >
+                    <ArrowLeft size={14} /> Back to Target Selector
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => startOptimizationForTarget(projectPath, selectedImage)}
+                  >
+                    <RefreshCw size={14} /> Retry Analysis
+                  </button>
+                </div>
+              </div>
+            ) : report ? (
+              <>
+                {activeWorkspaceTab === 'metrics' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <MetricCards
                   baseline={report.baseline}
@@ -979,10 +820,10 @@ jobs:
 
             {activeWorkspaceTab === 'diff' && (
               <DiffViewer
-                originalDockerfile={diffData.originalDockerfile}
-                optimizedDockerfile={diffData.optimizedDockerfile}
-                unifiedDiff={diffData.unifiedDiff}
-                improvements={diffData.improvements}
+                originalDockerfile={diffData?.originalDockerfile || ''}
+                optimizedDockerfile={diffData?.optimizedDockerfile || ''}
+                unifiedDiff={diffData?.unifiedDiff || ''}
+                improvements={diffData?.improvements || []}
                 onApply={handleApplyToProject}
                 onRollback={handleRollback}
               />
@@ -1027,6 +868,8 @@ jobs:
             {activeWorkspaceTab === 'export' && (
               <ExportHub onFetchExport={handleFetchExport} />
             )}
+              </>
+            ) : null}
           </main>
         </div>
       )}

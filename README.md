@@ -1,20 +1,20 @@
-# 🚀 Rover-Slim: Autonomous Container Optimization Engine & Docker & Rancher Desktop Extension
+# 🚀 Rover-Slim: Autonomous Container Optimization Engine & Desktop Extension
 
-[![Install in Docker Desktop](https://img.shields.io/badge/Docker%20Desktop-Install%20Extension-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://open.docker.com/extensions/marketplace?extensionId=bsankarganesh/rover-slim-extension&tag=latest)
+[![Docker Desktop Extension](https://img.shields.io/badge/Docker%20Desktop-Extension%20(CLI)-2496ED?style=flat&logo=docker&logoColor=white)](#1-install-in-docker-desktop)
+[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-bsankarganesh%2Frover--slim--extension-blue?style=flat&logo=docker&logoColor=white)](https://hub.docker.com/r/bsankarganesh/rover-slim-extension)
 [![GitHub Action](https://img.shields.io/badge/GitHub%20Action-v1-2088FF?style=flat&logo=githubactions&logoColor=white)](https://github.com/SankarGaneshb/rover-slim/releases/tag/v1.1.1)
 [![CI Test Suite](https://github.com/SankarGaneshb/rover-slim/actions/workflows/ci.yml/badge.svg)](https://github.com/SankarGaneshb/rover-slim/actions)
 [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](https://github.com/SankarGaneshb/rover-slim)
 [![Extension Release](https://img.shields.io/badge/Extension-v1.1.2-blue.svg)](https://github.com/SankarGaneshb/rover-slim/releases/tag/v1.1.2)
-[![Install in Rancher Desktop](https://img.shields.io/badge/Rancher%20Desktop-Install%20Extension-0075A8?style=for-the-badge&logo=suse&logoColor=white)](https://github.com/rancher-sandbox/rancher-desktop/pull/11115)
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://python.org)
 [![M8ven Trust](https://m8ven.ai/badge/mcp/sankarganeshb/rover-slim?variant=verified)](https://m8ven.ai/mcp/sankarganeshb/rover-slim?s=readme)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Rover-Slim** is an intelligent, source-first container optimization engine and official **Docker & Rancher Desktop Extension** that analyzes application Abstract Syntax Trees (AST), automatically segregates development bloat from minimal production dependencies, synthesizes hardened multi-stage Dockerfiles, and guarantees zero runtime breakage via **Green-on-Arrival (GoA)** Sentinel health checks.
+**Rover-Slim** is an intelligent, source-first container optimization engine and community **Container Desktop Extension** (compatible with Docker Desktop & Rancher Desktop) that analyzes application Abstract Syntax Trees (AST), automatically segregates development bloat from minimal production dependencies, synthesizes hardened multi-stage Dockerfiles, and guarantees zero runtime breakage via **Green-on-Arrival (GoA)** Sentinel health checks.
 
 ---
 
-## 📸 Docker & Rancher Desktop Extension Dashboard
+## 📸 Container Desktop Extension Dashboard
 
 ![Rover-Slim Dashboard](docs/dashboard.png)
 
@@ -26,7 +26,7 @@
 - **🏗️ Deterministic Multi-Stage Synthesis**: Synthesizes 2-stage and 3-stage minimal multi-arch Dockerfiles running under unprivileged non-root users (`appuser`, UID `10001`).
 - **🛡️ Context Shielding (`.dockerignore`)**: Automatically detects and shields build contexts from heavy test caches, `.git`, `node_modules`, and local state.
 - **⚡ Green-on-Arrival (GoA) Sentinel**: Boots ephemeral container sandboxes to verify startup integrity, validate active HTTP health probes (`/health`), and verify static asset graphs before final deployment.
-- **🐳 Docker & Rancher Desktop Extension Workbench**: Interactive visual studio featuring live KPI gauges, 2-column drag-and-drop dependency classifier, side-by-side Monaco diff inspector, 1-click **Apply** with safety checkpoint rollback, and export hub.
+- **🐳 Container Desktop Extension Workbench**: Interactive visual studio compatible with both **Docker Desktop** and **Rancher Desktop** featuring live KPI gauges, 2-column drag-and-drop dependency classifier, side-by-side Monaco diff inspector, 1-click **Apply** with safety checkpoint rollback, and export hub.
 - **🤖 Model Context Protocol (MCP) Server**: Built-in stdio MCP server for agentic IDEs (Antigravity, Cursor, Claude Desktop), officially listed on [M8ven MCP Registry & Trust Index](https://m8ven.ai/mcp/sankarganeshb/rover-slim) as a **Verified Publisher** with full safety tool annotations.
 
 ---
@@ -44,27 +44,46 @@
 
 ---
 
-## 🐳 Docker & Rancher Desktop Extension
+## 🐳 Container Desktop Extension (Docker Desktop & Rancher Desktop)
 
-### 1. Install in Rancher Desktop
-Install directly via the Rancher Desktop CLI (`rdctl`):
-```bash
-rdctl extension install bsankarganesh/rover-slim-extension:latest
-```
-*Or discover in the **Extensions → Catalog** tab once the [official catalog PR #11115](https://github.com/rancher-sandbox/rancher-desktop/pull/11115) merges!*
+Rover-Slim provides an interactive visual GUI extension compatible with both **Docker Desktop** and **Rancher Desktop**.
 
-### 2. Install in Docker Desktop
-Click below to open Docker Desktop directly and install Rover-Slim:
+> [!NOTE]
+> **Community Extension**: Rover-Slim is a standalone, community-maintained extension (not yet published to the official Docker Desktop Extensions Marketplace or Rancher Desktop Extension Catalog). You can install and use it directly via the standard CLI commands below using the published OCI image on Docker Hub (`bsankarganesh/rover-slim-extension:latest`).
 
-[![Install in Docker Desktop](https://img.shields.io/badge/Docker%20Desktop-Install%20Extension-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://open.docker.com/extensions/marketplace?extensionId=bsankarganesh/rover-slim-extension&tag=latest)
-
-Or install via Docker CLI:
+### 1. Install in Docker Desktop
+Install directly via the Docker CLI:
 ```bash
 docker extension install bsankarganesh/rover-slim-extension:latest
 ```
 
+To update or remove:
+```bash
+# Update to latest version
+docker extension update bsankarganesh/rover-slim-extension:latest
+
+# Uninstall extension
+docker extension uninstall bsankarganesh/rover-slim-extension:latest
+```
+
+### 2. Install in Rancher Desktop
+Install directly via the Rancher Desktop CLI (`rdctl`):
+```bash
+rdctl extension install bsankarganesh/rover-slim-extension:latest
+```
+*(Ensure Rancher Desktop is running with the **dockerd (Moby)** container runtime selected under Preferences > Container Engine).*
+
+To update or remove:
+```bash
+# Update to latest version
+rdctl extension update bsankarganesh/rover-slim-extension:latest
+
+# Uninstall extension
+rdctl extension uninstall bsankarganesh/rover-slim-extension:latest
+```
+
 ### 3. Launch the Extension
-Open **Rancher Desktop** or **Docker Desktop** and click **Rover Slim** in the left navigation sidebar!
+Open **Docker Desktop** or **Rancher Desktop** and click **Rover Slim** in the left navigation sidebar!
 
 ### 4. Extension Features
 - **Library Discovery**: Select local Docker images or project repositories.
@@ -207,15 +226,3 @@ cd extension/ui && npm test
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).
-
-### 2. Install in Rancher Desktop
-Rover-Slim natively supports Rancher Desktop (via its Docker-compatible extension architecture).
-
-1. Start Rancher Desktop (with the **dockerd (Moby)** container engine enabled in Preferences).
-2. Install via the CLI:
-   ``bash
-   rdctl extension install bsankarganesh/rover-slim-extension:latest
-   ``
-3. Open the **Rancher Desktop UI**, navigate to the **Extensions** tab, and click **Rover Slim**!
-
-> *Note: We are actively submitting Rover Slim to the official Rancher Desktop Extension Catalog for 1-click UI installations.*

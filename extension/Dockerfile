@@ -61,7 +61,7 @@ ENV PATH="/root/.local/bin:$PATH" \
 
 EXPOSE 8000
 
-# Official Docker Desktop Extension & OCI Labels
+# Docker Desktop Extension & OCI Labels
 LABEL org.opencontainers.image.title="Rover-Slim" \
       org.opencontainers.image.description="Autonomous Container Optimization, AST Dependency Segregation, and GoA Sentinel Verification" \
       org.opencontainers.image.vendor="Rover-Slim Team" \
@@ -70,7 +70,7 @@ LABEL org.opencontainers.image.title="Rover-Slim" \
       com.docker.desktop.extension.icon="https://raw.githubusercontent.com/SankarGaneshb/rover-slim/main/extension/icon.svg" \
       com.docker.extension.categories="utility-tools,developer-tools" \
       com.docker.extension.screenshots='[{"url": "https://raw.githubusercontent.com/SankarGaneshb/rover-slim/main/docs/dashboard.png", "alt": "Rover-Slim Extension Dashboard"}]' \
-      com.docker.extension.detailed-description="Rover-Slim analyzes Python AST code trees, segregates dev dependencies, synthesizes lean multi-stage Dockerfiles, and guarantees Green-on-Arrival container health. Compatible with Docker Desktop and Rancher Desktop." \
+      com.docker.extension.detailed-description="Rover-Slim analyzes Python AST code trees, segregates dev dependencies, synthesizes lean multi-stage Dockerfiles, and guarantees Green-on-Arrival container health. Compatible with Docker Desktop and container runtimes." \
       com.docker.extension.publisher-url="https://github.com/SankarGaneshb/rover-slim" \
       com.docker.extension.additional-urls='[{"title":"Documentation","url":"https://github.com/SankarGaneshb/rover-slim"}]' \
       com.docker.extension.changelog="v1.1.0 Polyglot AST Architecture, Bloat Diagnoser, FinOps ROI & CIS Security Release."
