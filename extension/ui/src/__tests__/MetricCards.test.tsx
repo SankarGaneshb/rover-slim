@@ -31,6 +31,9 @@ describe('MetricCards Component', () => {
     expect(screen.getByText(/-82\.0%/i)).toBeInTheDocument();
     expect(screen.getByText(/Image Footprint/i)).toBeInTheDocument();
     expect(screen.getAllByText(/180\.0/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Remaining Layer Waste/i)).toBeInTheDocument();
+    expect(screen.getByText(/Eliminated 11 duplicate layers/i)).toBeInTheDocument();
+    expect(screen.getByText(/Wasted Layer Space/i)).toBeInTheDocument();
     expect(screen.getByText(/Container Layer & Transfer Metrics Comparison/i)).toBeInTheDocument();
     expect(screen.getByText(/Uncompressed Image Size/i)).toBeInTheDocument();
   });

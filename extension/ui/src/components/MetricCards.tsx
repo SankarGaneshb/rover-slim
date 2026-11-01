@@ -72,14 +72,19 @@ export const MetricCards: React.FC<MetricCardsProps> = ({ baseline, optimized, s
         {/* Layer Waste Reduction */}
         <div className="card" style={{ borderLeft: '4px solid #8b5cf6' }}>
           <div className="card-title">
-            <span>Layer Waste</span>
+            <span>Remaining Layer Waste</span>
             <Layers size={18} color="#8b5cf6" />
           </div>
-          <div className="card-stat">
+          <div className="card-stat" style={{ color: optimized.wasted_percent <= 2.0 ? '#34d399' : '#8b5cf6' }}>
             {isAlreadyLean ? '0.0%' : `${optimized.wasted_percent.toFixed(1)}%`}
+            <span style={{ fontSize: '0.875rem', color: 'var(--text-dim)', fontWeight: 400, marginLeft: '0.35rem' }}>
+              left
+            </span>
           </div>
           <div className="card-subtext">
-            {isAlreadyLean ? 'Clean single/minimal layer hierarchy' : `Eliminated ${layerDelta} duplicate layers`}
+            {layerDelta > 0
+              ? `Eliminated ${layerDelta} duplicate layers (down from ${baseline.wasted_percent.toFixed(1)}%)`
+              : (isAlreadyLean ? 'Clean single/minimal layer hierarchy' : `Down from ${baseline.wasted_percent.toFixed(1)}% baseline`)}
           </div>
         </div>
 
@@ -147,6 +152,14 @@ export const MetricCards: React.FC<MetricCardsProps> = ({ baseline, optimized, s
                 <td style={{ padding: '0.75rem 1rem', textAlign: 'right', color: '#34d399' }}>{optimized.layer_count} layers</td>
                 <td style={{ padding: '0.75rem 1rem', textAlign: 'right', color: '#38bdf8', fontWeight: 700 }}>
                   {isAlreadyLean ? '0 layers' : `-${layerDelta} layers`}
+                </td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                <td style={{ padding: '0.75rem 1rem', fontWeight: 600 }}>Wasted Layer Space</td>
+                <td style={{ padding: '0.75rem 1rem', textAlign: 'right', color: 'var(--text-muted)' }}>{baseline.wasted_percent.toFixed(1)}% ({baseline.wasted_space_mb.toFixed(1)} MB)</td>
+                <td style={{ padding: '0.75rem 1rem', textAlign: 'right', color: '#34d399' }}>{optimized.wasted_percent.toFixed(1)}% ({optimized.wasted_space_mb.toFixed(1)} MB)</td>
+                <td style={{ padding: '0.75rem 1rem', textAlign: 'right', color: '#38bdf8', fontWeight: 700 }}>
+                  {isAlreadyLean ? '0.0 MB' : `-${Math.max(0, baseline.wasted_space_mb - optimized.wasted_space_mb).toFixed(1)} MB`}
                 </td>
               </tr>
               <tr>
