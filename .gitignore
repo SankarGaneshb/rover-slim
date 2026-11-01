@@ -37,3 +37,7 @@ Thumbs.db
 # Local documents & research
 MOSIP doc/
 
+# Agent working files
+.agents/
+
+

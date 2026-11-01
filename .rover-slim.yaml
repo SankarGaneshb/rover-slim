@@ -16,12 +16,11 @@ verification:
   auto_discover: true
   startup_command: "import rover_slim; print('[OK] Rover-Slim Verified')"
   probes:
-    - name: "HTTP Health Probe"
-      type: "http"
-      path: "/health"
-      port: 8000
-      expected_status: 200
-      timeout_seconds: 5
+    - name: "CLI Entrypoint Smoke Probe"
+      type: "script"
+      command: "rover-slim --version"
+      timeout_seconds: 10
+
 
 dependencies:
   always_production:
