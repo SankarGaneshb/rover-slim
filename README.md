@@ -7,7 +7,7 @@
 [![Docker Hub](https://img.shields.io/badge/Docker%20Hub-bsankarganesh%2Frover--slim--extension-blue?style=flat&logo=docker&logoColor=white)](https://hub.docker.com/r/bsankarganesh/rover-slim-extension)
 [![CI Test Suite](https://github.com/SankarGaneshb/rover-slim/actions/workflows/ci.yml/badge.svg)](https://github.com/SankarGaneshb/rover-slim/actions)
 [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](https://github.com/SankarGaneshb/rover-slim)
-[![Extension Release](https://img.shields.io/badge/Extension-v1.1.2-blue.svg)](https://github.com/SankarGaneshb/rover-slim/releases/tag/v1.1.2)
+[![Extension Release](https://img.shields.io/badge/Extension-v1.2.0-blue.svg)](https://github.com/SankarGaneshb/rover-slim/releases/tag/v1.2.0)
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -24,11 +24,13 @@
 ## 🎯 Key Capabilities
 
 - **🚀 Official GitHub Action**: Published on [GitHub Marketplace](https://github.com/marketplace/actions/rover-slim-container-optimization-governance) to automate container optimization and layer bloat governance directly in CI/CD with automated PR diff comments.
-- **🧬 AST-Driven Dependency Segregation**: Parses Python source syntax trees to detect genuine runtime `import` statements, generating lean `requirements-prod.txt` while quarantining dev tools (`pytest`, `black`, `ruff`, `locust`).
+- **☕ Polyglot Enterprise Ecosystems**: Auto-detects and optimizes **Java** (Spring Boot Layertools splitting, Maven/Gradle test exclusion), **.NET Core** (ASP.NET 8/9, MSBuild `PackageReference` pruning), **Node.js** (`devDependencies` stripping), and **Python** (AST-driven import mapping).
+- **📦 Cloud-Native Asset Decoupling (`rover-slim decouple`)**: Synthesizes Kubernetes Init Container (`emptyDir`) manifests and ORAS scripts to hydrate static web templates, ML models, and heavy localization assets dynamically via OCI registries without baking bloat into application images.
+- **🧬 AST-Driven Dependency Segregation**: Parses source syntax trees to detect genuine runtime dependencies, generating lean production images while quarantining test frameworks (`spring-boot-starter-test`, `xunit`, `jest`, `pytest`).
 - **🏗️ Deterministic Multi-Stage Synthesis**: Synthesizes 2-stage and 3-stage minimal multi-arch Dockerfiles running under unprivileged non-root users (`appuser`, UID `10001`).
 - **🛡️ Context Shielding (`.dockerignore`)**: Automatically detects and shields build contexts from heavy test caches, `.git`, `node_modules`, and local state.
-- **⚡ Green-on-Arrival (GoA) Sentinel**: Boots ephemeral container sandboxes to verify startup integrity, validate active HTTP health probes (`/health`), and verify static asset graphs before final deployment.
-- **🐳 Container Desktop Extension Workbench**: Interactive visual studio compatible with both **Docker Desktop** and **Rancher Desktop** featuring live KPI gauges, 2-column drag-and-drop dependency classifier, side-by-side Monaco diff inspector, 1-click **Apply** with safety checkpoint rollback, and export hub.
+- **⚡ Green-on-Arrival (GoA) Sentinel**: Boots ephemeral container sandboxes to verify startup integrity, validate active HTTP health probes (`/health`, `/actuator/health`, `/healthz`), and verify static asset graphs before final deployment.
+- **🐳 Container Desktop Extension Workbench (60 FPS)**: Interactive visual studio compatible with both **Docker Desktop** and **Rancher Desktop** featuring cooperative task chunking, live KPI gauges, 2-column dependency matrix, side-by-side Monaco diff inspector, 1-click **Apply** with safety checkpoint rollback, and export hub.
 - **🤖 Model Context Protocol (MCP) Server**: Built-in stdio MCP server for agentic IDEs (Antigravity, Cursor, Claude Desktop), officially listed on [M8ven MCP Registry & Trust Index](https://m8ven.ai/mcp/sankarganeshb/rover-slim) as a **Verified Publisher** with full safety tool annotations.
 
 ---
@@ -167,34 +169,45 @@ rover-slim audit . --image my-app:latest
 
 ### 3. Run End-to-End Optimization
 ```bash
-# Run AST segregation, Dockerfile synthesis, and GoA verification
+# Auto-detects runtime (Java/Spring Boot, .NET Core, Node.js, Python)
+# Runs dependency segregation, multi-stage synthesis, and GoA verification
 rover-slim optimize . --verify-goa
 
-# Interactive wizard mode
+# Interactive wizard mode (customize package classifications)
 rover-slim optimize . --interactive
 
 # Multi-Architecture build output (amd64 + arm64)
 rover-slim optimize . --multi-arch
 ```
 
-### 4. View Side-by-Side Structural Diff
+### 4. Cloud-Native Asset Decoupling (`rover-slim decouple`)
+```bash
+# Decouple heavy static UI bundles, templates, or ML models from the container
+# Generates Kubernetes emptyDir Init Container patches and ORAS OCI artifact scripts
+rover-slim decouple ./assets/templates \
+  --mount /app/static \
+  --ref registry.enterprise.local/assets/auth:v1 \
+  --output ./k8s
+```
+
+### 5. View Side-by-Side Structural Diff
 ```bash
 rover-slim diff .
 ```
 
-### 5. Generate Software Bill of Materials (SBOM)
+### 6. Generate Software Bill of Materials (SBOM)
 ```bash
-# Generates SPDX 2.3 and CycloneDX 1.5 SBOMs
+# Generates SPDX 2.3 and CycloneDX 1.5 SBOMs with polyglot purls (Maven, NuGet, npm, PyPI)
 rover-slim sbom . --output .rover-slim
 ```
 
-### 6. Continuous File Watcher Mode
+### 7. Continuous File Watcher Mode
 ```bash
-# Automatically synchronizes requirements-prod.txt upon source code edits
+# Automatically synchronizes dependency boundaries upon source code edits
 rover-slim watch .
 ```
 
-### 7. Safety Rollback Checkpoints
+### 8. Safety Rollback Checkpoints
 ```bash
 # Restores files from previous snapshot backup
 rover-slim rollback .
@@ -271,8 +284,8 @@ verification:
 ## 🧪 Testing & Verification
 
 ```bash
-# Run full Python test suite (81 tests, 90% coverage)
-pytest -v --cov=rover_slim --cov-report=term-missing
+# Run full polyglot test suite (181 passed across Python, Java, .NET, decoupling, and API suites)
+pytest -v
 
 # Run Extension React UI component test suite (6 suites, 100% green)
 cd extension/ui && npm test
