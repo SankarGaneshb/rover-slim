@@ -225,7 +225,7 @@ jobs:
               }
             }
 
-            body += '\n---\n*Automated Enterprise Governance Attestation by [Rover-Slim](https://github.com/market-rover/rover-slim)*\n';
+            body += '\n---\n*Automated Enterprise Governance Attestation by [Rover-Slim](https://github.com/SankarGaneshb/rover-slim)*\n';
 
             const commentMarker = '<!-- rover-slim-governance-report -->';
             const issueNumber = context.issue.number;

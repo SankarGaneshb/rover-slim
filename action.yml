@@ -1,6 +1,6 @@
 name: "Rover-Slim Container Optimization & Governance"
-description: "Audit, optimize, and shrink Docker containers via AST dependency pruning, multi-stage builds, and GoA sentinel checks."
-author: "Market-Rover SRE Team"
+description: "Audit, optimize, and shrink polyglot containers (Java, .NET, Node.js, Python) via AST dependency pruning, multi-stage builds, and GoA sentinel checks."
+author: "Sankar Ganesh B"
 branding:
   icon: "zap"
   color: "green"
@@ -59,7 +59,38 @@ runs:
       id: run-rover-slim
       shell: bash
       run: |
-        rover-slim optimize ${{ inputs.project_path }} --verify-goa
+        rover-slim optimize "${{ inputs.project_path }}" --verify-goa
+        if [ -f .rover-slim/report.json ]; then
+          python -c '
+          import json, os
+          try:
+              with open(".rover-slim/report.json", "r", encoding="utf-8") as f:
+                  rep = json.load(f)
+              base = float(rep.get("baseline", {}).get("uncompressed_size_mb", 0.0))
+              opt = float(rep.get("optimized", {}).get("uncompressed_size_mb", 0.0))
+              pct = round(((base - opt) / base * 100), 1) if base > 0 else 0.0
+              out_file = os.environ.get("GITHUB_OUTPUT")
+              if out_file:
+                  with open(out_file, "a", encoding="utf-8") as out:
+                      out.write(f"reduction_pct={pct}\n")
+                      out.write(f"optimized_size_mb={opt:.1f}\n")
+                      out.write(f"report_json={json.dumps(rep)}\n")
+          except Exception as e:
+              print(f"Warning: could not export outputs: {e}")
+          '
+        fi
+
+    - name: Auto-commit Optimized Artifacts
+      if: inputs.auto_commit == 'true'
+      shell: bash
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add Dockerfile .dockerignore requirements-prod.txt pom.xml.rover-prod package.json.rover-prod 2>/dev/null || true
+        if ! git diff --cached --quiet; then
+          git commit -m "chore(rover-slim): auto-commit optimized Dockerfile and production dependencies [skip ci]"
+          git push
+        fi
 
     - name: Post PR Summary Comment
       if: github.event_name == 'pull_request'
