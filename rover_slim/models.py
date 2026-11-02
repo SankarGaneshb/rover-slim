@@ -71,6 +71,7 @@ class OptimizationReport(BaseModel):
     baseline: ImageMetrics
     optimized: ImageMetrics
     pruned_dependencies: List[PrunedPackage]
+    production_dependencies: List[str] = Field(default_factory=list)
     goa_verification: Dict[str, Any]
 
 class FeedbackPayload(BaseModel):

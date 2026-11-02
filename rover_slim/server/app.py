@@ -245,9 +245,17 @@ def create_app() -> FastAPI:
             else:
                 orig_content = "FROM python:3.11\nWORKDIR /app\nCOPY . .\nRUN pip install -r requirements.txt\nCMD [\"python\", \"server.py\"]\n"
 
-            opt_content = engine.synthesizer.synthesize(
-                existing_dockerfile_path=existing_dockerfile if os.path.exists(existing_dockerfile) else None
-            )
+            adapter = engine.language_registry.detect_language(target_path)
+            if adapter.name != "python":
+                opt_content = adapter.synthesize_dockerfile(
+                    config=engine.config,
+                    root_dir=target_path,
+                    existing_dockerfile_path=existing_dockerfile if os.path.exists(existing_dockerfile) else None
+                )
+            else:
+                opt_content = engine.synthesizer.synthesize(
+                    existing_dockerfile_path=existing_dockerfile if os.path.exists(existing_dockerfile) else None
+                )
 
             unified_diff = engine.diff_inspector.generate_unified_diff(orig_content, opt_content)
             improvements = engine.diff_inspector.analyze_structural_improvements(orig_content, opt_content)
@@ -300,8 +308,11 @@ def create_app() -> FastAPI:
             # 1. Create a safety checkpoint before modifying files
             checkpoint_id = engine.checkpoint.create_checkpoint()
 
+            adapter = engine.language_registry.detect_language(target_path)
+            modified_files = []
+
             # 2. Segregate and write dependencies if requested
-            if req.write_reqs:
+            if req.write_reqs and adapter.name == "python":
                 if req.prod_packages is not None and req.dev_packages is not None:
                     from rover_slim.parsers.req_parser import RequirementEntry
                     prod_entries = [
@@ -315,6 +326,7 @@ def create_app() -> FastAPI:
                 else:
                     prod_entries, dev_entries, _ = engine.req_parser.segregate_dependencies()
                 engine.req_parser.write_segregated_files(prod_entries, dev_entries, output_dir=target_path)
+                modified_files.extend(["requirements-prod.txt", "requirements-dev.txt"])
 
             # 3. Write hardened .dockerignore
             if req.write_ignore:
@@ -322,25 +334,31 @@ def create_app() -> FastAPI:
                     output_path=os.path.join(target_path, ".dockerignore"),
                     force=True
                 )
+                modified_files.append(".dockerignore")
 
             # 4. Write synthesized multi-stage Dockerfile
             if req.write_dockerfile:
                 existing_df = os.path.join(target_path, "Dockerfile")
-                engine.synthesizer.write_dockerfile(
-                    output_path=existing_df,
-                    existing_dockerfile_path=existing_df if os.path.exists(existing_df) else None
-                )
+                if adapter.name != "python":
+                    dockerfile_content = adapter.synthesize_dockerfile(
+                        config=engine.config,
+                        root_dir=target_path,
+                        existing_dockerfile_path=existing_df if os.path.exists(existing_df) else None
+                    )
+                    with open(existing_df, "w", encoding="utf-8") as f:
+                        f.write(dockerfile_content)
+                else:
+                    engine.synthesizer.write_dockerfile(
+                        output_path=existing_df,
+                        existing_dockerfile_path=existing_df if os.path.exists(existing_df) else None
+                    )
+                modified_files.append("Dockerfile")
 
             return {
                 "status": "success",
                 "checkpoint_id": checkpoint_id,
                 "message": "Optimization artifacts successfully applied with safety checkpoint protection.",
-                "modified_files": [
-                    "requirements-prod.txt",
-                    "requirements-dev.txt",
-                    ".dockerignore",
-                    "Dockerfile"
-                ]
+                "modified_files": modified_files
             }
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))

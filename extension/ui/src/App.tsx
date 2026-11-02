@@ -238,6 +238,9 @@ export const App: React.FC = () => {
       });
       if (data?.report) {
         setReport(data.report);
+        if (data.report.production_dependencies && Array.isArray(data.report.production_dependencies)) {
+          setProdPackages(data.report.production_dependencies);
+        }
         if (data.report.pruned_dependencies && Array.isArray(data.report.pruned_dependencies)) {
           let lastYield = performance.now();
           const dev: string[] = [];

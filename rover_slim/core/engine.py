@@ -127,6 +127,10 @@ class RoverSlimEngine:
         if optimized.wasted_percent > self.config.thresholds.max_wasted_percent:
             status = "FAILED"
 
+        prod_strings = [
+            getattr(p, "name", str(p)) for p in prod_reqs
+        ]
+
         report = OptimizationReport(
             project=existing_image or self.config.project_name or os.path.basename(self.root_dir),
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -134,6 +138,7 @@ class RoverSlimEngine:
             baseline=baseline,
             optimized=optimized,
             pruned_dependencies=pruned,
+            production_dependencies=prod_strings,
             goa_verification=goa_results
         )
         return report

@@ -44,7 +44,7 @@ export const DependencyMatrix: React.FC<DependencyMatrixProps> = ({
   const getPackageMeta = (pkg: string) => {
     const found = prunedList.find(p => p.package === pkg || pkg.startsWith(p.package.split('==')[0]));
     return found || {
-      reason: 'Detected in Python AST imports',
+      reason: 'Runtime dependency retained for production execution',
       estimated_size_mb: 18.5,
     };
   };
@@ -89,7 +89,7 @@ export const DependencyMatrix: React.FC<DependencyMatrixProps> = ({
                 <CheckCircle2 size={18} color="#10b981" /> Production Runtime ({prodList.length})
               </h3>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-                Included in minimal container image (requirements-prod.txt)
+                Included in minimal production container image
               </p>
             </div>
             <span className="badge badge-green">Runtime Lean</span>
@@ -149,7 +149,7 @@ export const DependencyMatrix: React.FC<DependencyMatrixProps> = ({
                 <ShieldAlert size={18} color="#f59e0b" /> Dev & Tooling Dependencies ({devList.length})
               </h3>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-                Pruned from Docker image; kept in requirements-dev.txt
+                Pruned test and tooling dependencies excluded from production image
               </p>
             </div>
             <span className="badge badge-orange">Pruned Bloat</span>
