@@ -11,7 +11,10 @@ from rover_slim.core.watcher import ProjectWatcher
 from rover_slim.verifiers.goa_sentinel import GoASentinelVerifier
 from rover_slim.server.app import app
 
-client = TestClient(app)
+@pytest.fixture
+def client():
+    with TestClient(app, raise_server_exceptions=True) as test_client:
+        yield test_client
 
 def test_diff_inspector_print_diff():
     inspector = ContainerDiffInspector()
@@ -65,7 +68,7 @@ def test_goa_sentinel_full_verification(tmp_path):
         assert "overall_status" in results
         assert results["overall_status"] == "GREEN (PASSED)"
 
-def test_server_api_endpoints(tmp_path):
+def test_server_api_endpoints(client, tmp_path):
     # Health
     res = client.get("/api/health")
     assert res.status_code == 200
@@ -120,7 +123,7 @@ def test_server_api_endpoints(tmp_path):
         assert res.status_code == 200
         assert "content" in res.json()
 
-def test_server_api_404_handling():
+def test_server_api_404_handling(client):
     res = client.post("/api/audit", json={"path": "/non/existent/path/for/404"})
     assert res.status_code == 404
     

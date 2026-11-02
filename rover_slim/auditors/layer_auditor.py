@@ -111,7 +111,12 @@ class LayerAuditor:
             "python:3.10-slim": 140.0,
             "python:3.11-alpine": 65.0,
             "ubuntu": 78.0,
-            "debian": 125.0
+            "debian": 125.0,
+            "openjdk:17-jdk": 470.0,
+            "openjdk:17-jdk-slim": 410.0,
+            "eclipse-temurin:17-jdk-alpine": 330.0,
+            "node:20": 1080.0,
+            "mcr.microsoft.com/dotnet/sdk:8.0": 850.0
         }
         base_size = base_weights.get(base_image, 980.0)
         uncompressed = base_size + (packages_count * 8.5) + pruned_packages_mb + context_leakage_mb
@@ -140,7 +145,10 @@ class LayerAuditor:
             "python:3.11-slim": 145.0,
             "python:3.10-slim": 140.0,
             "python:3.12-slim": 148.0,
-            "python:3.11-alpine": 65.0
+            "python:3.11-alpine": 65.0,
+            "eclipse-temurin:17-jre-alpine": 165.0,
+            "node:20-alpine": 135.0,
+            "mcr.microsoft.com/dotnet/aspnet:8.0-alpine": 125.0
         }
         base_size = base_weights.get(base_image, 145.0)
         uncompressed = base_size + (prod_packages_count * 7.2) + 12.0

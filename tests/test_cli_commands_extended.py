@@ -142,3 +142,130 @@ def test_cli_error_branches(tmp_path, monkeypatch):
     assert result.exit_code == 1
     assert "Verification failed" in result.output
 
+
+def test_cli_decouple_help():
+    """Verifies rover-slim decouple --help displays usage and options."""
+    result = runner.invoke(app, ["decouple", "--help"])
+    assert result.exit_code == 0
+    assert "Synthesizes Cloud-Native Decoupling manifests" in result.output
+    assert "--mount" in result.output
+    assert "--ref" in result.output
+    assert "--output" in result.output
+
+
+def test_cli_decouple_console_output():
+    """Verifies decouple command outputs K8s patch and ORAS commands to console when --output is omitted."""
+    result = runner.invoke(app, [
+        "decouple",
+        "dist/",
+        "--mount", "/app/static",
+        "--ref", "registry.enterprise.local/assets/frontend:v1.0.0"
+    ])
+    assert result.exit_code == 0
+    assert "Cloud-Native Decoupling Synthesis Complete" in result.output
+    assert "emptyDir" in result.output
+    assert "init-fetch-" in result.output
+    assert "oras pull" in result.output
+    assert "oras push" in result.output
+    assert "kind: Deployment" in result.output
+
+
+def test_cli_decouple_file_output(tmp_path):
+    """Verifies decouple command writes manifest files and shell scripts when --output is provided."""
+    dummy_dist = tmp_path / "dist"
+    dummy_dist.mkdir()
+    (dummy_dist / "app.js").write_text("console.log('enterprise app');", encoding="utf-8")
+
+    out_dir = tmp_path / "decoupling-manifests"
+    result = runner.invoke(app, [
+        "decouple",
+        str(dummy_dist),
+        "--mount", "/app/static",
+        "--ref", "registry.enterprise.local/assets/frontend:v1.0.0",
+        "--output", str(out_dir)
+    ])
+    assert result.exit_code == 0
+    assert "Cloud-Native Decoupling manifests synthesized successfully" in result.output
+    assert "Estimated Image Layer Savings" in result.output
+
+    dep_patch = out_dir / "init-container-deployment-patch.yaml"
+    pod_patch = out_dir / "init-container-pod-patch.yaml"
+    push_sh = out_dir / "oras-push.sh"
+    pull_sh = out_dir / "oras-pull.sh"
+
+    assert dep_patch.exists()
+    assert pod_patch.exists()
+    assert push_sh.exists()
+    assert pull_sh.exists()
+
+    assert "kind: Deployment" in dep_patch.read_text(encoding="utf-8")
+    assert "kind: Pod" in pod_patch.read_text(encoding="utf-8")
+    assert "oras push" in push_sh.read_text(encoding="utf-8")
+    assert "oras pull" in pull_sh.read_text(encoding="utf-8")
+
+
+def test_cli_decouple_missing_required_args():
+    """Verifies that missing required arguments/options exits with code != 0."""
+    # Missing asset_path, --mount, --ref
+    res1 = runner.invoke(app, ["decouple"])
+    assert res1.exit_code != 0
+
+    # Missing --ref
+    res2 = runner.invoke(app, ["decouple", "dist/", "--mount", "/app/static"])
+    assert res2.exit_code != 0
+
+    # Missing --mount
+    res3 = runner.invoke(app, ["decouple", "dist/", "--ref", "registry.enterprise.local/assets/frontend:v1.0.0"])
+    assert res3.exit_code != 0
+
+
+def test_cli_decouple_custom_options():
+    """Verifies custom --name, --workload-type, --target-container, --plain-http, and --insecure."""
+    result = runner.invoke(app, [
+        "decouple",
+        "dist/",
+        "--mount", "/app/static",
+        "--ref", "registry.enterprise.local/assets/frontend:v1.0.0",
+        "--name", "custom-assets",
+        "--workload-type", "Pod",
+        "--target-container", "web-server",
+        "--plain-http",
+        "--insecure"
+    ])
+    assert result.exit_code == 0
+    assert "init-fetch-custom-assets" in result.output
+    assert "custom-assets-volume" in result.output
+    assert "web-server" in result.output
+    assert "--plain-http" in result.output
+    assert "--insecure" in result.output
+
+
+def test_cli_decouple_invalid_mount_path():
+    """Verifies that a relative mount path triggers an exit code 1 with clear error message."""
+    result = runner.invoke(app, [
+        "decouple",
+        "dist/",
+        "--mount", "relative/path",
+        "--ref", "registry.enterprise.local/assets/frontend:v1.0.0"
+    ])
+    assert result.exit_code == 1
+    assert "Decoupling failed:" in result.output
+    assert "must be an absolute Unix path" in result.output
+
+
+def test_cli_decouple_error_branch(monkeypatch):
+    """Verifies that unexpected synthesis errors are handled gracefully with exit code 1."""
+    monkeypatch.setattr(
+        "rover_slim.synthesizers.decoupling.DecouplingSynthesizer.generate_decoupling_bundle",
+        MagicMock(side_effect=Exception("Simulated synthesis failure"))
+    )
+    result = runner.invoke(app, [
+        "decouple",
+        "dist/",
+        "--mount", "/app/static",
+        "--ref", "registry.enterprise.local/assets/frontend:v1.0.0"
+    ])
+    assert result.exit_code == 1
+    assert "Decoupling failed: Simulated synthesis failure" in result.output
+
+

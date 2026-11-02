@@ -29,18 +29,41 @@ class SBOMGenerator:
         })
 
         for idx, entry in enumerate(prod_entries, 1):
-            version = entry.specifier.lstrip("=>~<").strip() or "latest"
+            if hasattr(entry, "specifier"):
+                name = entry.name
+                norm_name = entry.normalized_name
+                version = entry.specifier.lstrip("=>~<").strip() or "latest"
+                purl = f"pkg:pypi/{name}@{version}"
+            else:
+                raw = str(entry)
+                parts = raw.split(":")
+                if len(parts) >= 3:
+                    name = f"{parts[0]}:{parts[1]}"
+                    norm_name = parts[1].lower().replace("_", "-")
+                    version = parts[2]
+                    purl = f"pkg:maven/{parts[0]}/{parts[1]}@{version}"
+                elif len(parts) == 2:
+                    name = parts[0]
+                    norm_name = parts[0].lower().replace("_", "-")
+                    version = parts[1]
+                    purl = f"pkg:generic/{name}@{version}"
+                else:
+                    name = raw
+                    norm_name = raw.lower().replace("_", "-")
+                    version = "1.0.0"
+                    purl = f"pkg:generic/{name}@1.0.0"
+
             pkg_spdx = {
-                "name": entry.name,
-                "SPDXID": f"SPDXRef-Package-{entry.normalized_name}",
+                "name": name,
+                "SPDXID": f"SPDXRef-Package-{norm_name}",
                 "versionInfo": version,
-                "downloadLocation": f"https://pypi.org/project/{entry.name}/",
+                "downloadLocation": f"https://pypi.org/project/{name}/" if hasattr(entry, "specifier") else "NOASSERTION",
                 "filesAnalyzed": False,
                 "externalRefs": [
                     {
                         "referenceCategory": "PACKAGE-MANAGER",
                         "referenceType": "purl",
-                        "referenceLocator": f"pkg:pypi/{entry.name}@{version}"
+                        "referenceLocator": purl
                     }
                 ],
                 "licenseConcluded": "MIT",
@@ -68,12 +91,31 @@ class SBOMGenerator:
 
         for entry in enumerate(prod_entries, 1):
             item = entry[1]
-            version = item.specifier.lstrip("=>~<").strip() or "latest"
+            if hasattr(item, "specifier"):
+                name = item.name
+                version = item.specifier.lstrip("=>~<").strip() or "latest"
+                purl = f"pkg:pypi/{item.name}@{version}"
+            else:
+                raw = str(item)
+                parts = raw.split(":")
+                if len(parts) >= 3:
+                    name = f"{parts[0]}:{parts[1]}"
+                    version = parts[2]
+                    purl = f"pkg:maven/{parts[0]}/{parts[1]}@{version}"
+                elif len(parts) == 2:
+                    name = parts[0]
+                    version = parts[1]
+                    purl = f"pkg:generic/{name}@{version}"
+                else:
+                    name = raw
+                    version = "1.0.0"
+                    purl = f"pkg:generic/{name}@1.0.0"
+
             components.append({
                 "type": "library",
-                "name": item.name,
+                "name": name,
                 "version": version,
-                "purl": f"pkg:pypi/{item.name}@{version}",
+                "purl": purl,
                 "scope": "required",
                 "licenses": [
                     {"license": {"id": "MIT"}}

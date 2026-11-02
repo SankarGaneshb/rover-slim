@@ -94,8 +94,9 @@ def optimize_command(
             raise typer.Exit(code=1)
         else:
             console.print(f"\n[bold green][OK] Optimization complete![/bold green] Generated artifacts:")
-            console.print("  * [cyan]requirements-prod.txt[/cyan] (Lean production dependencies)")
-            console.print("  * [cyan]requirements-dev.txt[/cyan] (Full dev/test dependencies)")
+            if os.path.exists(os.path.join(path, "requirements-prod.txt")):
+                console.print("  * [cyan]requirements-prod.txt[/cyan] (Lean production dependencies)")
+                console.print("  * [cyan]requirements-dev.txt[/cyan] (Full dev/test dependencies)")
             console.print("  * [cyan].dockerignore[/cyan] (Hardened context shield)")
             console.print("  * [cyan]Dockerfile[/cyan] (Multi-stage slim template)")
             console.print("  * [cyan].rover-slim/report.html[/cyan] (Interactive dashboard)")
@@ -249,5 +250,111 @@ def mcp_command():
     from rover_slim.mcp_server import run_mcp_server
     run_mcp_server()
 
+@app.command("decouple")
+def decouple_command(
+    asset_path: str = typer.Argument(..., help="Path to static asset directory or file to decouple"),
+    mount: str = typer.Option(..., "--mount", "-m", help="Target mount path inside application container (e.g. /app/static)"),
+    ref: str = typer.Option(..., "--ref", "-r", help="Remote OCI artifact reference (e.g. registry.enterprise.local/assets/frontend:v1.0.0)"),
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Optional output directory to write patch manifests and ORAS scripts"),
+    name: Optional[str] = typer.Option(None, "--name", "-n", help="Optional asset identifier name (default: basename of asset_path)"),
+    workload_type: str = typer.Option("Deployment", "--workload-type", "--workload", "-w", help="Kubernetes workload type (Deployment or Pod)"),
+    target_container: str = typer.Option("app", "--target-container", "-t", help="Name of main application container to mount volume"),
+    config: Optional[str] = typer.Option(None, "--config", "-c", help="Path to custom .rover-slim.yaml"),
+    plain_http: bool = typer.Option(False, "--plain-http", help="Use plain HTTP instead of HTTPS for ORAS"),
+    insecure: bool = typer.Option(False, "--insecure", help="Allow insecure SSL connections for ORAS"),
+):
+    """Synthesizes Cloud-Native Decoupling manifests: K8s Pod/Deployment patch YAML with shared emptyDir volumes and init containers, plus ORAS push/pull scripts."""
+    try:
+        import re
+        from rover_slim.synthesizers.decoupling import (
+            DecouplingSynthesizer,
+            AssetSpec,
+            OrasConfig,
+        )
+        from rover_slim.config import load_config
+
+        # Sanitize name if not provided
+        if name:
+            asset_name = name
+        else:
+            raw_base = os.path.basename(os.path.normpath(asset_path)).strip("-._")
+            sanitized = re.sub(r"[^a-zA-Z0-9_.-]", "-", raw_base).strip("-")
+            asset_name = sanitized if (sanitized and sanitized[0].isalnum()) else "static-assets"
+
+        # Validate mount path starts with /
+        if not mount or not mount.startswith("/"):
+            console.print(f"[bold red]Decoupling failed: Mount path '{mount}' must be an absolute Unix path starting with '/'.[/bold red]")
+            raise typer.Exit(code=1)
+
+        # Estimate asset size in MB if available on local disk
+        total_bytes = 0
+        if os.path.exists(asset_path):
+            try:
+                if os.path.isfile(asset_path):
+                    total_bytes = os.path.getsize(asset_path)
+                elif os.path.isdir(asset_path):
+                    total_bytes = sum(
+                        os.path.getsize(os.path.join(root, f))
+                        for root, _, files in os.walk(asset_path)
+                        for f in files
+                        if os.path.isfile(os.path.join(root, f))
+                    )
+            except Exception:
+                total_bytes = 0
+
+        size_mb = max(round(total_bytes / (1024 * 1024), 2), 0.01) if total_bytes > 0 else 0.0
+
+        # Construct AssetSpec model (validates name, mount_path, and remote_artifact_ref)
+        asset = AssetSpec(
+            name=asset_name,
+            source_path=asset_path,
+            mount_path=mount,
+            remote_artifact_ref=ref,
+            size_mb=size_mb,
+        )
+
+        cfg = load_config(config_path=config) if config else None
+        oras_cfg = OrasConfig(plain_http=plain_http, insecure=insecure)
+        synth = DecouplingSynthesizer(config=cfg, oras_config=oras_cfg)
+
+        if output:
+            manifest_paths = synth.write_manifests(
+                output_dir=output,
+                assets=[asset],
+                target_container_name=target_container,
+            )
+            console.print(f"[bold green][OK] Cloud-Native Decoupling manifests synthesized successfully at '{output}':[/bold green]")
+            console.print(f"  * Deployment Patch: [cyan]{manifest_paths['deployment_patch']}[/cyan]")
+            console.print(f"  * Pod Patch: [cyan]{manifest_paths['pod_patch']}[/cyan]")
+            console.print(f"  * ORAS Push Script: [cyan]{manifest_paths['oras_push_script']}[/cyan]")
+            console.print(f"  * ORAS Pull Script: [cyan]{manifest_paths['oras_pull_script']}[/cyan]")
+            if size_mb > 0:
+                console.print(f"  * Estimated Image Layer Savings: [bold green]{size_mb:.2f} MB[/bold green]")
+        else:
+            bundle = synth.generate_decoupling_bundle(
+                assets=[asset],
+                target_container_name=target_container,
+                base_workload_type=workload_type,
+            )
+            console.print(f"[bold green][OK] Cloud-Native Decoupling Synthesis Complete[/bold green] (Estimated Savings: {bundle.estimated_savings_mb:.1f} MB)")
+            console.print("\n[bold cyan]--- Kubernetes Deployment Patch ---[/bold cyan]")
+            console.print(bundle.deployment_patch_yaml)
+            console.print("[bold cyan]--- Kubernetes Pod Patch ---[/bold cyan]")
+            console.print(bundle.pod_patch_yaml)
+            console.print("[bold cyan]--- ORAS Push Commands ---[/bold cyan]")
+            console.print("\n".join(bundle.oras_push_commands))
+            console.print("\n[bold cyan]--- ORAS Pull Commands ---[/bold cyan]")
+            console.print("\n".join(bundle.oras_pull_commands))
+            if bundle.dockerfile_pruning_directives:
+                console.print("\n[bold cyan]--- Dockerfile Pruning Recommendations ---[/bold cyan]")
+                console.print("\n".join(bundle.dockerfile_pruning_directives))
+
+    except typer.Exit:
+        raise
+    except Exception as e:
+        console.print(f"[bold red]Decoupling failed: {e}[/bold red]")
+        raise typer.Exit(code=1)
+
 if __name__ == "__main__":
     app()
+

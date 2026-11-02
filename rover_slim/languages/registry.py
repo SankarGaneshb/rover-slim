@@ -3,6 +3,8 @@ from typing import List, Optional, Dict
 from rover_slim.languages.base import BaseLanguageAdapter
 from rover_slim.languages.python_adapter import PythonLanguageAdapter
 from rover_slim.languages.node_adapter import NodeLanguageAdapter
+from rover_slim.languages.java_adapter import JavaLanguageAdapter
+from rover_slim.languages.dotnet_adapter import DotNetLanguageAdapter
 
 class LanguageRegistry:
     """Registry that manages and auto-detects language adapters for a given project root."""
@@ -12,6 +14,8 @@ class LanguageRegistry:
         # Register default adapters
         self.register(PythonLanguageAdapter())
         self.register(NodeLanguageAdapter())
+        self.register(JavaLanguageAdapter())
+        self.register(DotNetLanguageAdapter())
 
     def register(self, adapter: BaseLanguageAdapter) -> None:
         self._adapters[adapter.name] = adapter

@@ -8,6 +8,7 @@ from rover_slim.parsers.req_parser import RequirementsParser
 from rover_slim.parsers.dockerfile_parser import DockerfileParser
 from rover_slim.parsers.context_shield import ContextShield
 from rover_slim.parsers.interactive_wizard import InteractiveWizard
+from rover_slim.languages.registry import LanguageRegistry
 from rover_slim.synthesizers.multistage import MultiStageSynthesizer
 from rover_slim.synthesizers.multiarch import MultiArchSynthesizer
 from rover_slim.synthesizers.dockerignore_gen import DockerignoreGenerator
@@ -32,6 +33,7 @@ class RoverSlimEngine:
         if not self.config.project_name or self.config.project_name in ("default-project", "my-service"):
             self.config.project_name = os.path.basename(self.root_dir) or "rover-slim-project"
         
+        self.language_registry = LanguageRegistry()
         self.req_parser = RequirementsParser(self.root_dir)
         self.ast_parser = ASTDependencyParser(self.root_dir)
         self.context_shield = ContextShield(self.root_dir)
@@ -52,10 +54,18 @@ class RoverSlimEngine:
 
     def audit(self, existing_image: Optional[str] = None) -> OptimizationReport:
         """Audits the current repository and baseline image metrics."""
-        prod_reqs, dev_reqs, pruned = self.req_parser.segregate_dependencies(
-            always_prod=self.config.dependencies.get("always_production", []),
-            always_dev=self.config.dependencies.get("always_development", [])
-        )
+        adapter = self.language_registry.detect_language(self.root_dir)
+        if adapter.name == "python":
+            prod_reqs, dev_reqs, pruned = self.req_parser.segregate_dependencies(
+                always_prod=self.config.dependencies.get("always_production", []),
+                always_dev=self.config.dependencies.get("always_development", [])
+            )
+        else:
+            prod_reqs, dev_reqs, pruned = adapter.segregate_dependencies(
+                self.root_dir,
+                always_prod=self.config.dependencies.get("always_production", []),
+                always_dev=self.config.dependencies.get("always_development", [])
+            )
         total_reqs = len(prod_reqs) + len(dev_reqs)
 
         context_audit = self.context_shield.audit_context_leakage()
@@ -85,14 +95,27 @@ class RoverSlimEngine:
                     optimized = baseline.model_copy(deep=True)
                     optimized.uncompressed_size_mb = round(baseline.uncompressed_size_mb * 0.88, 1)
         else:
+            if adapter.name == "java":
+                default_base = "openjdk:17-jdk"
+                default_target_base = "eclipse-temurin:17-jre-alpine"
+            elif adapter.name == "dotnet":
+                default_base = "mcr.microsoft.com/dotnet/sdk:8.0"
+                default_target_base = "mcr.microsoft.com/dotnet/aspnet:8.0-alpine"
+            elif adapter.name == "node":
+                default_base = "node:20"
+                default_target_base = "node:20-alpine"
+            else:
+                default_base = "python:3.11"
+                default_target_base = self.config.build.target_base_image
+
             baseline = self.layer_auditor.estimate_baseline_metrics(
-                base_image="python:3.11",
+                base_image=default_base,
                 packages_count=total_reqs or 25,
                 pruned_packages_mb=pruned_mb,
                 context_leakage_mb=leakage_mb
             )
             optimized = self.layer_auditor.estimate_optimized_metrics(
-                base_image=self.config.build.target_base_image,
+                base_image=default_target_base,
                 prod_packages_count=len(prod_reqs) or 8
             )
 
@@ -134,15 +157,23 @@ class RoverSlimEngine:
 
         try:
             # 1. AST Dependency Segregation
-            prod_reqs, dev_reqs, pruned = self.req_parser.segregate_dependencies(
-                always_prod=self.config.dependencies.get("always_production", []),
-                always_dev=self.config.dependencies.get("always_development", [])
-            )
+            adapter = self.language_registry.detect_language(self.root_dir)
+            if adapter.name == "python":
+                prod_reqs, dev_reqs, pruned = self.req_parser.segregate_dependencies(
+                    always_prod=self.config.dependencies.get("always_production", []),
+                    always_dev=self.config.dependencies.get("always_development", [])
+                )
+            else:
+                prod_reqs, dev_reqs, pruned = adapter.segregate_dependencies(
+                    self.root_dir,
+                    always_prod=self.config.dependencies.get("always_production", []),
+                    always_dev=self.config.dependencies.get("always_development", [])
+                )
 
             if interactive:
                 prod_reqs, dev_reqs, pruned = self.wizard.review_segregation(prod_reqs, dev_reqs, pruned)
 
-            if write_reqs:
+            if write_reqs and adapter.name == "python":
                 self.req_parser.write_segregated_files(prod_reqs, dev_reqs, output_dir=out_dir)
 
             # 2. Build Context Shield (.dockerignore)
@@ -156,8 +187,16 @@ class RoverSlimEngine:
             existing_dockerfile = os.path.join(self.root_dir, "Dockerfile")
             dockerfile_target = os.path.join(out_dir, "Dockerfile")
             if write_dockerfile:
-                if multi_arch:
+                if multi_arch and adapter.name == "python":
                     self.multiarch_synthesizer.write_dockerfile(dockerfile_target)
+                elif adapter.name != "python":
+                    dockerfile_content = adapter.synthesize_dockerfile(
+                        config=self.config,
+                        root_dir=out_dir,
+                        existing_dockerfile_path=existing_dockerfile if os.path.exists(existing_dockerfile) else None
+                    )
+                    with open(dockerfile_target, "w", encoding="utf-8") as f:
+                        f.write(dockerfile_content)
                 else:
                     self.synthesizer.write_dockerfile(
                         output_path=dockerfile_target,
@@ -206,7 +245,15 @@ class RoverSlimEngine:
         else:
             orig = f"FROM python:3.11\nWORKDIR /app\nCOPY . .\nRUN pip install -r requirements.txt\nCMD [\"python\", \"server.py\"]\n"
 
-        optimized = self.synthesizer.synthesize(existing_dockerfile_path=existing_dockerfile_path if os.path.exists(existing_dockerfile_path) else None)
+        adapter = self.language_registry.detect_language(self.root_dir)
+        if adapter.name != "python":
+            optimized = adapter.synthesize_dockerfile(
+                config=self.config,
+                root_dir=self.root_dir,
+                existing_dockerfile_path=existing_dockerfile_path if os.path.exists(existing_dockerfile_path) else None
+            )
+        else:
+            optimized = self.synthesizer.synthesize(existing_dockerfile_path=existing_dockerfile_path if os.path.exists(existing_dockerfile_path) else None)
         self.diff_inspector.print_diff(orig, optimized)
         return self.diff_inspector.generate_unified_diff(orig, optimized)
 

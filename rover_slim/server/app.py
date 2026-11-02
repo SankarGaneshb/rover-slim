@@ -189,8 +189,11 @@ def create_app() -> FastAPI:
         """Lists local Docker images available in the container runtime."""
         images_list = []
         try:
+            from rover_slim.core.docker_client import DockerClientWrapper
+            if not DockerClientWrapper().is_available():
+                raise RuntimeError("Docker daemon is not available")
             import docker
-            client = docker.from_env()
+            client = docker.from_env(timeout=1)
             for img in client.images.list():
                 tags = img.tags or ["<none>:<none>"]
                 size_mb = round(img.attrs.get("Size", 0) / (1024 * 1024), 1)

@@ -33,7 +33,28 @@ class CVEAuditor:
             except Exception:
                 pass
 
+        if self.grype_path:
+            try:
+                res = subprocess.run(
+                    [self.grype_path, image_tag, "-o", "json"],
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
+                if res.returncode == 0:
+                    data = json.loads(res.stdout)
+                    counts = {"LOW": 0, "MEDIUM": 0, "HIGH": 0, "CRITICAL": 0}
+                    for m in data.get("matches", []):
+                        sev = m.get("vulnerability", {}).get("severity", "UNKNOWN").upper()
+                        if sev in counts:
+                            counts[sev] += 1
+                    return counts
+            except Exception:
+                pass
+
         # Fallback estimation for slim vs fat image
+        if "distroless" in image_tag or "wolfi" in image_tag:
+            return {"LOW": 0, "MEDIUM": 0, "HIGH": 0, "CRITICAL": 0}
         if "slim" in image_tag or "alpine" in image_tag:
             return {"LOW": 1, "MEDIUM": 0, "HIGH": 0, "CRITICAL": 0}
         return {"LOW": 12, "MEDIUM": 8, "HIGH": 3, "CRITICAL": 1}

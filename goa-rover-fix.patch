@@ -1,0 +1,6 @@
+// Main-Thread Chunking Optimization
+- for (const item of dataset) { process(item); }
++ for (const item of dataset) {
++   process(item);
++   if (performance.now() - lastYield > 16) await new Promise(r => setTimeout(r, 0));
++ }
