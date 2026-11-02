@@ -1,4 +1,24 @@
+# ==============================================================================
+# Docker Desktop Extension Compose Specification: Rover-Slim
+#
+# Docker Desktop automatically launches and manages this service inside its
+# lightweight virtual machine runtime.
+#
+# Service Architecture:
+#   - Image: ${DESKTOP_PLUGIN_IMAGE} (injected dynamically by Docker Desktop runtime)
+#   - Sockets:
+#       * /var/run/docker.sock: Host Docker daemon access for image analysis & slimming
+#       * /run/guest-services: VM guest socket bridge for frontend-to-backend IPC
+#   - Ports:
+#       * 127.0.0.1:${ROVER_SLIM_PORT:-40040}:8000: Host loopback binding for HTTP fallback
+#
+# Local Installation & Verification:
+#   docker build -t rover-slim:extension -f extension/Dockerfile .
+#   docker extension install rover-slim:extension
+#   curl http://localhost:40040/api/health
+# ==============================================================================
 version: '3.8'
+
 services:
   backend:
     image: "${DESKTOP_PLUGIN_IMAGE}"
@@ -7,3 +27,4 @@ services:
       - /run/guest-services:/run/guest-services
     ports:
       - "127.0.0.1:${ROVER_SLIM_PORT:-40040}:8000"
+

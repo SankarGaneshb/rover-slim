@@ -132,18 +132,26 @@ export const App: React.FC = () => {
       if (ddClient?.docker?.listImages) {
         const rawImages = await ddClient.docker.listImages();
         if (Array.isArray(rawImages)) {
-          const parsed: LocalDockerImage[] = rawImages.flatMap((img: any) => {
+          let lastYield = performance.now();
+          const parsed: LocalDockerImage[] = [];
+          for (const img of rawImages) {
             const tags = img.RepoTags || ['<none>:<none>'];
             const sizeMb = Math.round((img.Size || 0) / (1024 * 1024));
             const id = (img.Id || '').replace('sha256:', '');
             const created = img.Created ? new Date(img.Created * 1000).toISOString() : '';
-            return tags.map((t: string) => ({
-              id,
-              tag: t,
-              size_mb: sizeMb,
-              created,
-            }));
-          });
+            for (const t of tags) {
+              parsed.push({
+                id,
+                tag: t,
+                size_mb: sizeMb,
+                created,
+              });
+            }
+            if (performance.now() - lastYield > 16) {
+              await new Promise(r => setTimeout(r, 0));
+              lastYield = performance.now();
+            }
+          }
           if (parsed.length > 0) {
             setImagesList(parsed);
             setBackendStatus('connected');
@@ -155,7 +163,20 @@ export const App: React.FC = () => {
 
       const data = await apiCall('/api/images', 'GET');
       if (data?.images) {
-        setImagesList(data.images);
+        if (Array.isArray(data.images)) {
+          let lastYield = performance.now();
+          const normalizedImages: LocalDockerImage[] = [];
+          for (const img of data.images) {
+            normalizedImages.push(img);
+            if (performance.now() - lastYield > 16) {
+              await new Promise(r => setTimeout(r, 0));
+              lastYield = performance.now();
+            }
+          }
+          setImagesList(normalizedImages);
+        } else {
+          setImagesList(data.images);
+        }
         setBackendStatus('connected');
       }
     } catch {
@@ -218,7 +239,15 @@ export const App: React.FC = () => {
       if (data?.report) {
         setReport(data.report);
         if (data.report.pruned_dependencies && Array.isArray(data.report.pruned_dependencies)) {
-          const dev = data.report.pruned_dependencies.map((p: any) => p.package);
+          let lastYield = performance.now();
+          const dev: string[] = [];
+          for (const p of data.report.pruned_dependencies) {
+            dev.push(p.package);
+            if (performance.now() - lastYield > 16) {
+              await new Promise(r => setTimeout(r, 0));
+              lastYield = performance.now();
+            }
+          }
           setDevPackages(dev);
         }
       } else {
@@ -348,6 +377,24 @@ export const App: React.FC = () => {
       : '0.0';
 
     if (format === 'markdown') {
+      let dependencyBreakdown = '';
+      if (report.pruned_dependencies && report.pruned_dependencies.length > 0) {
+        let lastYield = performance.now();
+        const lines: string[] = [];
+        for (const p of report.pruned_dependencies) {
+          lines.push(`* \`${p.package}\` (${p.action}) - ${p.reason}`);
+          if (performance.now() - lastYield > 16) {
+            await new Promise(r => setTimeout(r, 0));
+            lastYield = performance.now();
+          }
+        }
+        dependencyBreakdown = lines.join('\n');
+      } else if (isLean) {
+        dependencyBreakdown = '* Minimal Alpine container runtime. Zero unused dev dependencies.';
+      } else {
+        dependencyBreakdown = '* Clean production dependencies segregated.';
+      }
+
       return `# 🚀 Rover-Slim Optimization Report: ${selectedImage || projectPath}
 
 **Optimization Status**: \`${report.status}\` | **Generated**: ${new Date().toISOString()}
@@ -361,9 +408,7 @@ export const App: React.FC = () => {
 * **GoA Sentinel Health**: \`${report.goa_verification?.overall_status || 'GREEN (PASSED)'}\`
 
 ## ✂️ Dependency Segregation Breakdown
-${report.pruned_dependencies && report.pruned_dependencies.length > 0 
-  ? report.pruned_dependencies.map((p: any) => `* \`${p.package}\` (${p.action}) - ${p.reason}`).join('\n')
-  : isLean ? '* Minimal Alpine container runtime. Zero unused dev dependencies.' : '* Clean production dependencies segregated.'}
+${dependencyBreakdown}
 
 ---
 *Optimized autonomously with Rover-Slim Desktop Extension*`;
