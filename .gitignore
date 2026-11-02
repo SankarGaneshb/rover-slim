@@ -35,7 +35,9 @@ Thumbs.db
 .idea/
 
 # Local documents & research
-MOSIP doc/
+*[dD]oc*/
+!docs/
+!docs/**
 
 # Agent working files
 .agents/
