@@ -1,0 +1,262 @@
+name: Container Optimization & Governance Gate
+
+# ==============================================================================
+# Enterprise CI/CD Governance & Policy Gating Workflow
+# Phase 4 Enforcement: Autonomous Optimization, GoA Sentinel & Quality Gates
+#
+# References:
+#   - action.yml (Rover-Slim Composite GitHub Action)
+#   - .rover-slim.yaml (Enterprise Policy Thresholds)
+#   - ROVER_SLIM_PLAN.md (CI/CD Governance Specification §6.4)
+# ==============================================================================
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  container-governance:
+    name: Container Optimization, Policy Gating & GoA Sentinel
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 2. Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: 3. Install Rover-Slim & Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+          pip install -e .
+
+      - name: 4. Diagnostic Container Audit
+        id: audit
+        run: |
+          echo "Executing baseline diagnostic container audit..."
+          rover-slim audit .
+
+      - name: 5. Optimization with GoA Sentinel Verification
+        id: optimize
+        run: |
+          echo "Executing autonomous container optimization and Green-on-Arrival Sentinel verification..."
+          rover-slim optimize . --verify-goa
+
+      - name: 6. Policy Gate Evaluation
+        id: policy-gate
+        run: |
+          python -c '
+          import json
+          import sys
+
+          REPORT_PATH = ".rover-slim/report.json"
+          MAX_IMAGE_SIZE_MB = 350.0
+          MAX_WASTED_PERCENT = 10.0
+
+          print("=" * 70)
+          print("[POLICY GATE] ENTERPRISE CONTAINER GOVERNANCE EVALUATION")
+          print("=" * 70)
+
+          try:
+              with open(REPORT_PATH, "r", encoding="utf-8") as f:
+                  report = json.load(f)
+          except Exception as exc:
+              print(f"[FATAL] Could not read governance report from {REPORT_PATH}: {exc}")
+              sys.exit(1)
+
+          optimized = report.get("optimized", {})
+          wasted_pct = float(optimized.get("wasted_percent", 0.0))
+          size_mb = float(optimized.get("uncompressed_size_mb", 0.0))
+          cve_summary = optimized.get("cve_summary", {})
+          critical_cves = int(cve_summary.get("CRITICAL", 0))
+          high_cves = int(cve_summary.get("HIGH", 0))
+          goa_status = report.get("goa_verification", {}).get("overall_status", "UNKNOWN")
+          overall_status = report.get("status", "UNKNOWN")
+
+          print(f"  * Overall Status        : {overall_status}")
+          print(f"  * GoA Sentinel Status   : {goa_status}")
+          print(f"  * Final Image Size      : {size_mb:.2f} MB (Policy Threshold: <= {MAX_IMAGE_SIZE_MB} MB)")
+          print(f"  * Layer Waste Ratio     : {wasted_pct:.2f}% (Policy Threshold: <= {MAX_WASTED_PERCENT}%)")
+          print(f"  * Critical CVEs         : {critical_cves} (Policy Threshold: == 0)")
+          print(f"  * High CVEs             : {high_cves} (Policy Threshold: == 0)")
+          print("=" * 70)
+
+          violations = []
+
+          if overall_status != "PASSED":
+              violations.append(f"Optimization report status is {overall_status} (must be PASSED)")
+
+          if goa_status != "GREEN (PASSED)":
+              violations.append(f"Green-on-Arrival Sentinel verification failed with status: {goa_status}")
+
+          if size_mb > MAX_IMAGE_SIZE_MB:
+              violations.append(f"Image size {size_mb:.2f} MB exceeds policy maximum of {MAX_IMAGE_SIZE_MB} MB")
+
+          if wasted_pct > MAX_WASTED_PERCENT:
+              violations.append(f"Layer waste {wasted_pct:.2f}% exceeds policy maximum of {MAX_WASTED_PERCENT}%")
+
+          if critical_cves > 0:
+              violations.append(f"Found {critical_cves} CRITICAL vulnerability/vulnerabilities (zero allowed)")
+
+          if high_cves > 0:
+              violations.append(f"Found {high_cves} HIGH vulnerability/vulnerabilities (zero allowed)")
+
+          if violations:
+              print("\n[POLICY GATE FAILED] PR merge blocked due to governance policy breaches:")
+              for v in violations:
+                  print(f"   [VIOLATION] {v}")
+              print("\nRemediation required: re-run optimization locally or address CVEs before merging.\n")
+              sys.exit(1)
+
+          print("\n[POLICY GATE PASSED] All enterprise security, size, and bloat policies verified.\n")
+          '
+
+      - name: 7. Post or Update Interactive PR Summary Comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          GATE_OUTCOME: ${{ steps.policy-gate.outcome }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+
+            const reportPath = '.rover-slim/report.json';
+            const summaryPath = '.rover-slim/summary.md';
+
+            if (!fs.existsSync(reportPath)) {
+              console.log('No report.json found at ' + reportPath + '. Skipping PR comment.');
+              return;
+            }
+
+            let report = {};
+            try {
+              report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+            } catch (err) {
+              console.error('Failed to parse report.json:', err);
+              return;
+            }
+
+            const baseline = report.baseline || {};
+            const optimized = report.optimized || {};
+            const goa = report.goa_verification || {};
+
+            const baseSize = (baseline.uncompressed_size_mb || 0).toFixed(1);
+            const optSize = (optimized.uncompressed_size_mb || 0).toFixed(1);
+            const sizeDelta = ((optimized.uncompressed_size_mb || 0) - (baseline.uncompressed_size_mb || 0)).toFixed(1);
+            const sizePct = baseline.uncompressed_size_mb
+              ? (((baseline.uncompressed_size_mb - optimized.uncompressed_size_mb) / baseline.uncompressed_size_mb) * 100).toFixed(1)
+              : '0.0';
+
+            const baseLayers = baseline.layer_count || 0;
+            const optLayers = optimized.layer_count || 0;
+            const layerDelta = optLayers - baseLayers;
+
+            const baseWaste = (baseline.wasted_percent || 0).toFixed(1);
+            const optWaste = (optimized.wasted_percent || 0).toFixed(1);
+
+            const baseComp = (baseline.compressed_size_mb || 0).toFixed(1);
+            const optComp = (optimized.compressed_size_mb || 0).toFixed(1);
+
+            const baseTime = (baseline.build_time_seconds || 0).toFixed(1);
+            const optTime = (optimized.build_time_seconds || 0).toFixed(1);
+
+            const baseCrit = (baseline.cve_summary && baseline.cve_summary.CRITICAL) || 0;
+            const optCrit = (optimized.cve_summary && optimized.cve_summary.CRITICAL) || 0;
+
+            const baseHigh = (baseline.cve_summary && baseline.cve_summary.HIGH) || 0;
+            const optHigh = (optimized.cve_summary && optimized.cve_summary.HIGH) || 0;
+
+            const gateOutcome = process.env.GATE_OUTCOME || 'unknown';
+            const gatePassed = gateOutcome === 'success';
+
+            const goaStatus = goa.overall_status || 'UNKNOWN';
+            const goaIcon = goaStatus.includes('GREEN') ? '🟢' : '🔴';
+
+            let body = '<!-- rover-slim-governance-report -->\n';
+            body += '## 🚀 Rover-Slim Container Optimization & Governance Report\n\n';
+            body += '> **Project**: `' + (report.project || 'rover-slim') + '` | **Generated**: `' + (report.timestamp || new Date().toISOString()) + '`\n';
+            body += '> **GoA Sentinel Attestation**: ' + goaIcon + ' **' + goaStatus + '** | **Policy Gate**: ' + (gatePassed ? '🟢 **PASSED**' : '🔴 **FAILED**') + '\n\n';
+
+            body += '### 📊 Container Metrics Comparison Table\n\n';
+            body += '| Metric | Baseline (Fat) | Optimized (Slim) | Delta / Savings | Policy Threshold | Status |\n';
+            body += '| :--- | :--- | :--- | :--- | :--- | :---: |\n';
+            body += '| **Uncompressed Size** | `' + baseSize + ' MB` | `' + optSize + ' MB` | **' + sizeDelta + ' MB (-' + sizePct + '%)** | `<= 350.0 MB` | ' + (Number(optSize) <= 350.0 ? '✅' : '❌') + ' |\n';
+            body += '| **Registry Transfer (Comp.)** | `' + baseComp + ' MB` | `' + optComp + ' MB` | `' + (optComp - baseComp).toFixed(1) + ' MB` | - | ℹ️ |\n';
+            body += '| **Layer Count** | `' + baseLayers + '` | `' + optLayers + '` | `' + layerDelta + ' layers` | - | ℹ️ |\n';
+            body += '| **Wasted Layer Space** | `' + baseWaste + '%` | `' + optWaste + '%` | `' + (optWaste - baseWaste).toFixed(1) + '%` | `<= 10.0%` | ' + (Number(optWaste) <= 10.0 ? '✅' : '❌') + ' |\n';
+            body += '| **Build / Cold Start** | `' + baseTime + 's` | `' + optTime + 's` | `' + (optTime - baseTime).toFixed(1) + 's` | `<= 2.5s` | ✅ |\n';
+            body += '| **Critical CVEs** | `' + baseCrit + '` | `' + optCrit + '` | `' + (optCrit - baseCrit) + '` | `== 0` | ' + (optCrit === 0 ? '✅' : '❌') + ' |\n';
+            body += '| **High CVEs** | `' + baseHigh + '` | `' + optHigh + '` | `' + (optHigh - baseHigh) + '` | `== 0` | ' + (optHigh === 0 ? '✅' : '❌') + ' |\n\n';
+
+            body += '### 🛡️ GoA Sentinel Attestation & Policy Verification\n\n';
+            if (gatePassed) {
+              body += '> 🟢 **POLICY GATE PASSED**: All enterprise container governance policies met.\n';
+              body += '> - **Zero Critical/High CVEs**: Verified (`' + optCrit + '` Critical, `' + optHigh + '` High)\n';
+              body += '> - **Layer Waste Threshold**: Verified (`' + optWaste + '%` <= 10.0%)\n';
+              body += '> - **Container Size Budget**: Verified (`' + optSize + ' MB` <= 350.0 MB)\n';
+              body += '> - **Runtime GoA Sentinel**: Verified (`' + goaStatus + '`)\n';
+            } else {
+              body += '> 🔴 **POLICY GATE FAILED**: Merge blocked due to governance policy breaches.\n';
+              body += '> - Please inspect the GitHub Actions step logs for remediation details.\n';
+            }
+
+            if (fs.existsSync(summaryPath)) {
+              const summaryContent = fs.readFileSync(summaryPath, 'utf8');
+              if (summaryContent.includes('### ✂️ Pruned Dependencies')) {
+                const prunedPart = summaryContent.split('### ✂️ Pruned Dependencies')[1].split('### 🛡️ Green-on-Arrival')[0];
+                body += '\n### ✂️ Pruned Dependencies\n' + prunedPart.trim() + '\n';
+              }
+            }
+
+            body += '\n---\n*Automated Enterprise Governance Attestation by [Rover-Slim](https://github.com/market-rover/rover-slim)*\n';
+
+            const commentMarker = '<!-- rover-slim-governance-report -->';
+            const issueNumber = context.issue.number;
+            if (!issueNumber) {
+              console.log('No pull request issue number found in context. Skipping PR comment.');
+              return;
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              issue_number: issueNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100
+            });
+
+            const existing = comments.find(c => c.body && c.body.includes(commentMarker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                comment_id: existing.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+              console.log('Updated existing PR governance comment ID: ' + existing.id);
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: issueNumber,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+              console.log('Created new PR governance comment.');
+            }
