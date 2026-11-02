@@ -1,5 +1,6 @@
 import pytest
 import os
+import re
 from typer.testing import CliRunner
 from unittest.mock import MagicMock, patch
 from rover_slim.cli import app
@@ -147,10 +148,11 @@ def test_cli_decouple_help():
     """Verifies rover-slim decouple --help displays usage and options."""
     result = runner.invoke(app, ["decouple", "--help"])
     assert result.exit_code == 0
-    assert "Synthesizes Cloud-Native Decoupling manifests" in result.output
-    assert "--mount" in result.output
-    assert "--ref" in result.output
-    assert "--output" in result.output
+    clean_output = re.sub(r"\x1b\[[0-9;]*[a-zA-Z]", "", result.output)
+    assert "Synthesizes Cloud-Native Decoupling manifests" in clean_output
+    assert "--mount" in clean_output
+    assert "--ref" in clean_output
+    assert "--output" in clean_output
 
 
 def test_cli_decouple_console_output():
