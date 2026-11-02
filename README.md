@@ -243,9 +243,10 @@ Rover-Slim adheres to the official MCP specification risk vocabulary and OpenAI 
 | `audit_container` | Audits directory or image for bloat, wasted layers, context leaks, and CVEs | `true` | `false` | `true` | `false` |
 | `get_markdown_report` | Generates GitHub PR markdown diff summary report | `true` | `false` | `true` | `false` |
 | `verify_goa` | Runs Green-on-Arrival Sentinel runtime boot integrity & health probes | `true` | `false` | `true` | `false` |
+| `decouple_project` | Synthesizes K8s emptyDir volume mounts & ORAS test/static asset scripts | `false` | `false` | `true` | `false` |
 | `optimize_project` | Runs end-to-end container optimization & writes multi-stage Dockerfile | `false` | `true` | `true` | `false` |
 
-> 🛡️ **Autonomous Safety**: Read-only inspection tools execute frictionlessly in agentic IDEs without confirmation prompts, while `optimize_project` signals `destructiveHint: true` so hosts warn users before modifying files.
+> 🛡️ **Autonomous Safety**: Read-only inspection tools and synthesis tools (`decouple_project`) execute frictionlessly in agentic IDEs without confirmation prompts, while `optimize_project` signals `destructiveHint: true` so hosts warn users before modifying existing build configuration.
 
 ---
 

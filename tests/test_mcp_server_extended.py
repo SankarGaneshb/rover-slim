@@ -36,7 +36,7 @@ def test_mcp_server_fastmcp_run(monkeypatch):
     }):
         run_mcp_server()
         assert mock_instance.run.called
-        assert len(captured_annotations) == 4
+        assert len(captured_annotations) == 5
 
 def test_mcp_fallback_jsonrpc():
     requests = [
@@ -45,7 +45,8 @@ def test_mcp_fallback_jsonrpc():
         json.dumps({"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "optimize_project", "arguments": {"project_path": "."}}}),
         json.dumps({"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "verify_goa", "arguments": {"project_path": "."}}}),
         json.dumps({"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {"name": "get_markdown_report", "arguments": {"project_path": "."}}}),
-        json.dumps({"jsonrpc": "2.0", "id": 6, "method": "tools/call", "params": {"name": "invalid_tool", "arguments": {}}})
+        json.dumps({"jsonrpc": "2.0", "id": 6, "method": "tools/call", "params": {"name": "decouple_project", "arguments": {"asset_path": "dist", "mount_path": "/app/static", "remote_artifact_ref": "ghcr.io/myorg/assets:v1"}}}),
+        json.dumps({"jsonrpc": "2.0", "id": 7, "method": "tools/call", "params": {"name": "invalid_tool", "arguments": {}}})
     ]
     
     fake_stdin = io.StringIO("\n".join(requests) + "\n")
@@ -56,21 +57,26 @@ def test_mcp_fallback_jsonrpc():
         _run_fallback_jsonrpc()
     
     output_lines = [line for line in fake_stdout.getvalue().splitlines() if line.strip()]
-    assert len(output_lines) == 6
+    assert len(output_lines) == 7
     
     # Check tool list response
     tool_list_resp = json.loads(output_lines[0])
     assert tool_list_resp["id"] == 1
     assert "tools" in tool_list_resp["result"]
     tools = tool_list_resp["result"]["tools"]
-    assert len(tools) == 4
+    assert len(tools) == 5
     for tool in tools:
         assert "annotations" in tool
         for hint in ["readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint"]:
             assert isinstance(tool["annotations"][hint], bool)
     
+    # Check decouple tool response
+    decouple_resp = json.loads(output_lines[5])
+    assert "success" in decouple_resp["result"]["content"][0]["text"]
+    assert "deployment_patch_yaml" in decouple_resp["result"]["content"][0]["text"]
+
     # Check unknown tool response
-    unknown_tool_resp = json.loads(output_lines[5])
+    unknown_tool_resp = json.loads(output_lines[6])
     assert "Unknown tool" in unknown_tool_resp["result"]["content"][0]["text"]
 
 def test_fastmcp_real_tool_annotations():
@@ -93,7 +99,7 @@ def test_fastmcp_real_tool_annotations():
         mcp.tool(name=name, annotations=ann)(_dummy)
 
     tools = asyncio.run(mcp.list_tools())
-    assert len(tools) == 4
+    assert len(tools) == 5
     for t in tools:
         assert t.annotations is not None
         assert isinstance(t.annotations.readOnlyHint, bool)
@@ -108,3 +114,5 @@ def test_fastmcp_real_tool_annotations():
     assert by_name["optimize_project"].destructiveHint is True
     assert by_name["verify_goa"].readOnlyHint is True
     assert by_name["get_markdown_report"].readOnlyHint is True
+    assert by_name["decouple_project"].readOnlyHint is False
+    assert by_name["decouple_project"].destructiveHint is False

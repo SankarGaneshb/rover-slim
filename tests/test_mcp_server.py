@@ -21,7 +21,7 @@ def test_mcp_fallback_jsonrpc_list_and_call(monkeypatch):
     output_lines = [json.loads(line) for line in fake_stdout.getvalue().splitlines() if line.strip()]
     assert len(output_lines) == 2
     tools = output_lines[0]["result"]["tools"]
-    assert len(tools) == 4
+    assert len(tools) == 5
     for tool in tools:
         assert "annotations" in tool
         ann = tool["annotations"]
@@ -37,5 +37,7 @@ def test_mcp_fallback_jsonrpc_list_and_call(monkeypatch):
     assert tools_by_name["optimize_project"]["destructiveHint"] is True
     assert tools_by_name["verify_goa"]["readOnlyHint"] is True
     assert tools_by_name["get_markdown_report"]["readOnlyHint"] is True
+    assert tools_by_name["decouple_project"]["readOnlyHint"] is False
+    assert tools_by_name["decouple_project"]["destructiveHint"] is False
 
     assert output_lines[1]["result"]["content"][0]["type"] == "text"
