@@ -1,0 +1,40 @@
+name: 💡 Architecture / RFC Proposal
+description: Propose an architectural decision, engine extension, or formalized session conclusion
+title: "[RFC]: "
+labels: ["rfc", "architecture", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to propose architectural enhancements, new AST parsers, or to formalize conclusions reached during design and AI-assisted sessions.
+  - type: textarea
+    id: context
+    attributes:
+      label: 1. Context & Motivation
+      description: What problem or architectural gap is this proposal addressing?
+      placeholder: Provide context, current limitations, or findings from analysis/reviews.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 2. Proposed Design / Architecture
+      description: Detailed breakdown of components, data flow, or algorithms.
+      placeholder: Describe the changes, AST analysis rules, multi-stage Docker patterns, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: goa_impact
+    attributes:
+      label: 3. Green-on-Arrival (GoA) & Safety Verification
+      description: How will this change ensure zero runtime breakage or test coverage preservation?
+      placeholder: Detail verification checks (Pytest, Vitest, GoA Sentinel, non-root security).
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 4. Alternatives Considered
+      description: What other approaches were evaluated, and why was this one chosen?
+    validations:
+      required: false
