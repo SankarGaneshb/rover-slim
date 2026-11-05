@@ -56,6 +56,36 @@ def check_gh_cli():
         return False
 
 
+def ensure_labels_exist(required_labels: set):
+    """Ensures required labels exist on the repo, creating missing ones."""
+    res = subprocess.run(["gh", "label", "list", "--repo", REPO], capture_output=True, text=True)
+    existing_labels = set()
+    if res.returncode == 0:
+        for line in res.stdout.strip().split("\n"):
+            if line:
+                existing_labels.add(line.split("\t")[0].strip().lower())
+
+    label_palette = {
+        "release": ("#0e8a16", "Release cadence, version tags, and changelog"),
+        "governance": ("#5319e7", "Project policies, security, and governance"),
+        "community": ("#bfdadc", "Community engagement, sponsorship, and discussions"),
+        "core": ("#1d76db", "Core AST parsing and container engine"),
+        "ci/cd": ("#fbca04", "Continuous integration, workflows, and branch protections"),
+        "rfc": ("#d4c5f9", "Architectural requests for comments and design specs"),
+        "architecture": ("#0052cc", "System architecture and module design"),
+    }
+
+    for label in required_labels:
+        if label.lower() not in existing_labels:
+            color, desc = label_palette.get(label.lower(), ("#ededed", "Custom project label"))
+            print(f"  [+] Creating missing label: '{label}'")
+            subprocess.run(
+                ["gh", "label", "create", label, "--repo", REPO, "--color", color, "--description", desc],
+                capture_output=True,
+                text=True,
+            )
+
+
 def create_issue_via_gh(issue: dict):
     """Creates a GitHub issue using `gh issue create`."""
     cmd = ["gh", "issue", "create", "--repo", REPO, "--title", issue["title"], "--body", issue["body"]]
@@ -132,6 +162,10 @@ def main():
         print("  1. 'gh auth login' (GitHub CLI)", file=sys.stderr)
         print("  2. Setting the GITHUB_TOKEN environment variable or passing --token <token>", file=sys.stderr)
         sys.exit(1)
+
+    if has_gh:
+        all_labels = {lbl for iss in issues for lbl in iss["labels"]}
+        ensure_labels_exist(all_labels)
 
     print(f"Publishing {len(issues)} issues to {REPO}...")
     for i, issue in enumerate(issues, start=1):
