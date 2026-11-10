@@ -3,6 +3,7 @@ from rover_slim.languages.python_adapter import PythonLanguageAdapter
 from rover_slim.languages.node_adapter import NodeLanguageAdapter
 from rover_slim.languages.java_adapter import JavaLanguageAdapter
 from rover_slim.languages.dotnet_adapter import DotNetLanguageAdapter
+from rover_slim.languages.rust_adapter import RustLanguageAdapter
 from rover_slim.languages.registry import LanguageRegistry
 
 __all__ = [
@@ -11,5 +12,6 @@ __all__ = [
     "NodeLanguageAdapter",
     "JavaLanguageAdapter",
     "DotNetLanguageAdapter",
+    "RustLanguageAdapter",
     "LanguageRegistry"
 ]
