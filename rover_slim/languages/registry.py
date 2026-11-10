@@ -5,6 +5,7 @@ from rover_slim.languages.python_adapter import PythonLanguageAdapter
 from rover_slim.languages.node_adapter import NodeLanguageAdapter
 from rover_slim.languages.java_adapter import JavaLanguageAdapter
 from rover_slim.languages.dotnet_adapter import DotNetLanguageAdapter
+from rover_slim.languages.rust_adapter import RustLanguageAdapter
 
 class LanguageRegistry:
     """Registry that manages and auto-detects language adapters for a given project root."""
@@ -16,6 +17,7 @@ class LanguageRegistry:
         self.register(NodeLanguageAdapter())
         self.register(JavaLanguageAdapter())
         self.register(DotNetLanguageAdapter())
+        self.register(RustLanguageAdapter())
 
     def register(self, adapter: BaseLanguageAdapter) -> None:
         self._adapters[adapter.name] = adapter
