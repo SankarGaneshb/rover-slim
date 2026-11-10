@@ -76,6 +76,8 @@ To maintain full transparency and ensure future contributors (both human develop
    - All PRs must pass the CI pipeline (`ci.yml`): Python tests across matrix 3.10–3.13, Vitest UI suite, and self-optimization dogfooding before merging.
 5. **Issue Resolution & Metric Health**:
    - Merging the PR automatically closes the issue, elevating the project's health and maintenance score across community indices (such as SilentStars).
+6. **Automated Contributor Acknowledgement**:
+   - Every incoming PR is greeted in real-time by the workflow in `.github/workflows/pr-acknowledgement.yml`. For onboarding new repositories, see [docs/governance/CONTRIBUTOR_PR_ACKNOWLEDGEMENT.md](docs/governance/CONTRIBUTOR_PR_ACKNOWLEDGEMENT.md).
 
 ---
 
